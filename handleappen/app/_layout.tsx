@@ -1,0 +1,105 @@
+import { useEffect, useState } from 'react';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { ActivityIndicator, View, Platform } from 'react-native';
+import 'react-native-reanimated';
+import '../global.css';
+
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ensureAnonymousSession } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { Colors } from '@/constants/theme';
+import '@/i18n';
+
+// Custom themes matching Stitch design
+const StitchDark = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    primary: Colors.dark.tint,
+    background: Colors.dark.background,
+    card: Colors.dark.card,
+    text: Colors.dark.text,
+    border: 'rgba(47, 101, 85, 0.2)',
+    notification: Colors.dark.tint,
+  },
+};
+
+const StitchLight = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: Colors.light.tint,
+    background: Colors.light.background,
+    card: Colors.light.card,
+    text: Colors.light.text,
+    border: 'rgba(79, 129, 112, 0.15)',
+    notification: Colors.light.tint,
+  },
+};
+
+// Inject Google Fonts for web
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const link = document.createElement('link');
+  link.href = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap";
+  link.rel = 'stylesheet';
+  document.head.appendChild(link);
+
+  const style = document.createElement('style');
+  style.textContent = `body { font-family: 'Manrope', system-ui, sans-serif; }`;
+  document.head.appendChild(style);
+}
+
+export default function RootLayout() {
+  const colorScheme = useColorScheme();
+  const [ready, setReady] = useState(false);
+  const setSession = useAuthStore((s) => s.setSession);
+  const setHouseholdId = useAuthStore((s) => s.setHouseholdId);
+  const setLoading = useAuthStore((s) => s.setLoading);
+
+  useEffect(() => {
+    async function init() {
+      try {
+        const session = await ensureAnonymousSession();
+        setSession(session);
+
+        if (session) {
+          const { data: user } = await supabase
+            .from('users')
+            .select('household_id')
+            .eq('id', session.user.id)
+            .single();
+
+          setHouseholdId(user?.household_id ?? null);
+        }
+      } catch (e) {
+        console.error('Auth init error:', e);
+      } finally {
+        setLoading(false);
+        setReady(true);
+      }
+    }
+    init();
+  }, [setSession, setHouseholdId, setLoading]);
+
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.dark.background }}>
+        <ActivityIndicator size="large" color={Colors.dark.tint} />
+      </View>
+    );
+  }
+
+  return (
+    <ThemeProvider value={colorScheme === 'dark' ? StitchDark : StitchLight}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(app)" />
+      </Stack>
+      <StatusBar style="auto" />
+    </ThemeProvider>
+  );
+}

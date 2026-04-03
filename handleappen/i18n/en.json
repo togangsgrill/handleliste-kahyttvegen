@@ -1,0 +1,54 @@
+{
+  "app_name": "Handleappen",
+  "tabs": {
+    "lists": "Lists",
+    "recipes": "Recipes",
+    "history": "History",
+    "statistics": "Statistics",
+    "settings": "Settings"
+  },
+  "household": {
+    "title": "Welcome to Handleappen",
+    "subtitle": "Create a household or join an existing one",
+    "create": "Create household",
+    "join": "Join household",
+    "name_placeholder": "Household name (e.g. Home)",
+    "code_placeholder": "Invite code",
+    "create_button": "Create",
+    "join_button": "Join",
+    "invalid_code": "Invalid invite code",
+    "error": "Something went wrong. Try again."
+  },
+  "lists": {
+    "title": "Shopping lists",
+    "empty": "No shopping lists yet",
+    "empty_subtitle": "Tap + to create your first list",
+    "new_list": "New shopping list",
+    "name_placeholder": "List name (e.g. Weekly groceries)",
+    "create": "Create",
+    "cancel": "Cancel",
+    "items_count": "{{checked}} of {{total}} items",
+    "delete": "Delete",
+    "delete_confirm": "Are you sure you want to delete this list?"
+  },
+  "items": {
+    "add_placeholder": "Add item...",
+    "checked_section": "Checked ({{count}})",
+    "no_items": "List is empty",
+    "no_items_subtitle": "Type above to add items",
+    "quantity": "Quantity",
+    "note": "Note",
+    "note_placeholder": "E.g. buy organic",
+    "save": "Save",
+    "edit": "Edit item"
+  },
+  "settings": {
+    "title": "Settings",
+    "household_name": "Household",
+    "invite_code": "Invite code",
+    "copy_code": "Copy code",
+    "members": "Members",
+    "language": "Language",
+    "theme": "Theme"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "app_name": "Handleappen",
+  "tabs": {
+    "lists": "Lister",
+    "recipes": "Oppskrifter",
+    "history": "Historikk",
+    "statistics": "Statistikk",
+    "settings": "Innstillinger"
+  },
+  "household": {
+    "title": "Velkommen til Handleappen",
+    "subtitle": "Opprett en husholdning eller bli med i en eksisterende",
+    "create": "Opprett husholdning",
+    "join": "Bli med i husholdning",
+    "name_placeholder": "Husholdsnavnet (f.eks. Kahyttvegen)",
+    "code_placeholder": "Invitasjonskode",
+    "create_button": "Opprett",
+    "join_button": "Bli med",
+    "invalid_code": "Ugyldig invitasjonskode",
+    "error": "Noe gikk galt. Prøv igjen."
+  },
+  "lists": {
+    "title": "Handlelister",
+    "empty": "Ingen handlelister ennå",
+    "empty_subtitle": "Trykk + for å opprette din første liste",
+    "new_list": "Ny handleliste",
+    "name_placeholder": "Listenavn (f.eks. Ukeshandel)",
+    "create": "Opprett",
+    "cancel": "Avbryt",
+    "items_count": "{{checked}} av {{total}} varer",
+    "delete": "Slett",
+    "delete_confirm": "Er du sikker på at du vil slette denne listen?"
+  },
+  "items": {
+    "add_placeholder": "Legg til vare...",
+    "checked_section": "Avhuket ({{count}})",
+    "no_items": "Listen er tom",
+    "no_items_subtitle": "Skriv i feltet over for å legge til varer",
+    "quantity": "Antall",
+    "note": "Notat",
+    "note_placeholder": "F.eks. kjøp økologisk",
+    "save": "Lagre",
+    "edit": "Rediger vare"
+  },
+  "settings": {
+    "title": "Innstillinger",
+    "household_name": "Husholdning",
+    "invite_code": "Invitasjonskode",
+    "copy_code": "Kopier kode",
+    "members": "Medlemmer",
+    "language": "Språk",
+    "theme": "Tema"
+  }
+}
