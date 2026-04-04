@@ -222,10 +222,10 @@ export default function ListsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       {/* Header */}
-      {isWeb && <View style={{ height: insets.top + 58 }} />}
+      {isWeb && <View style={{ height: 58 } as any} />}
       <View style={{
-        backgroundColor: 'rgba(236,253,245,0.92)', paddingTop: insets.top + 8, zIndex: 40,
-        ...(isWeb ? { backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'fixed', top: 0, left: 0, right: 0 } as any : {}),
+        backgroundColor: 'rgba(236,253,245,0.92)', zIndex: 40,
+        ...(isWeb ? { paddingTop: 'env(safe-area-inset-top, 0px)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'fixed', top: 0, left: 0, right: 0 } as any : { paddingTop: insets.top + 8 }),
       }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 14 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 } as any}>
