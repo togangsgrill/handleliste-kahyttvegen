@@ -326,9 +326,8 @@ export default function StatisticsScreen() {
         }}
       >
         <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: color.outline, marginBottom: 8, textTransform: 'uppercase', fontFamily: font.body }}>Statistikk</Text>
-        <Text style={{ fontSize: 32, fontWeight: '800', color: color.onSurface, letterSpacing: -1, marginBottom: 24, fontFamily: font.headline }}>
-          Oversikt
-        </Text>
+        <Text style={{ fontSize: 32, fontWeight: '800', color: color.onSurface, letterSpacing: -1, fontFamily: font.headline }}>Oversikt</Text>
+        <Text style={{ fontSize: 16, color: color.onSurfaceVariant, marginTop: 6, marginBottom: 24, fontFamily: font.body }}>Din handleprofil</Text>
 
         {/* ===== GAMIFICATION HERO ===== */}
         {stats && stats.gamification.totalTrips > 0 && stats.gamification.daysSinceLast !== null && (

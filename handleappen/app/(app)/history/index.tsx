@@ -276,6 +276,7 @@ export default function HistoryScreen() {
         <View style={{ marginBottom: 24 }}>
           <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: C.textSec, marginBottom: 8, textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Historikk</Text>
           <Text style={{ fontSize: 32, fontWeight: '800', color: C.text, letterSpacing: -1, fontFamily: C.font } as any}>Handlehistorikk</Text>
+          <Text style={{ fontSize: 16, color: C.textSec, marginTop: 6, fontFamily: C.fontBody } as any}>Dine handleturer</Text>
         </View>
 
         {/* Pending visit */}

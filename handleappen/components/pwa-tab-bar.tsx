@@ -4,7 +4,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 
 const C = {
   primary: '#006947',
-  inactive: 'rgba(76,129,112,0.7)',
+  inactive: 'rgba(76,129,112,0.5)',
   bg: 'rgba(255,255,255,0.92)',
 };
 

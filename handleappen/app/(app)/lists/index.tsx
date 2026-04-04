@@ -65,7 +65,7 @@ const ListCard = memo(function ListCard({ item, itemCount, onDelete }: {
     <TouchableOpacity
       style={[{
         backgroundColor: C.white,
-        borderRadius: 20, padding: 16,
+        borderRadius: 24, padding: 16,
         flexDirection: 'row', alignItems: 'center', gap: 14,
       }, isWeb ? ({ boxShadow: '0px 2px 10px rgba(0,54,42,0.06)' } as any) : {}]}
       onPress={() => router.push(`/(app)/lists/${item.id}`)}
