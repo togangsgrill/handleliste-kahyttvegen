@@ -198,18 +198,13 @@ Regler:
 - Hvis oppskriften ikke finnes i dokumentet, returner tom array []
 - Returner KUN gyldig JSON, ingen annen tekst`;
 
-export async function parseMealPlanFromImage(
-  fileBase64: string,
-  mediaType: string,
-  onProgress?: (msg: string) => void,
-): Promise<MealPlanParseResult> {
+// Steg 1: Hent kun oppskriftstitler fra PDF (rask)
+export async function parseMealPlanTitles(fileBase64: string, mediaType: string): Promise<MealPlanRecipe[]> {
   const isPdf = mediaType === 'application/pdf';
   const contentBlock = isPdf
     ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: fileBase64 } }
     : { type: 'image', source: { type: 'base64', media_type: mediaType, data: fileBase64 } };
 
-  // Steg 1: Hent oppskriftstitler
-  onProgress?.('Leser oppskriftsnavn...');
   const titlesText = await callClaudeAPI({
     model: CLAUDE_MODEL,
     max_tokens: 1000,
@@ -219,38 +214,53 @@ export async function parseMealPlanFromImage(
       content: [contentBlock, { type: 'text', text: 'List opp alle oppskriftene i denne ukesmenyen. Returner KUN JSON.' }],
     }],
   });
-  console.log('[parseMealPlanFromImage] titler råsvar:', titlesText.slice(0, 500));
 
-  const titlesResult: MealPlanParseResult = JSON.parse(extractJson(titlesText));
-  const recipes = Array.isArray(titlesResult?.recipes) ? titlesResult.recipes : [];
+  const result: MealPlanParseResult = JSON.parse(extractJson(titlesText));
+  const recipes = Array.isArray(result?.recipes) ? result.recipes : [];
   if (recipes.length === 0) throw new Error('Fant ingen oppskrifter i filen. Prøv et klarere bilde eller en annen side.');
+  return recipes;
+}
 
-  // Steg 2: Hent ingredienser per oppskrift i separate kall
+// Steg 2: Hent ingredienser for én oppskrift (kjøres i bakgrunn)
+export async function parseMealPlanIngredients(
+  fileBase64: string,
+  mediaType: string,
+  recipeTitle: string,
+): Promise<{ name: string; quantity: number; unit: string | null; is_staple: boolean }[]> {
+  const isPdf = mediaType === 'application/pdf';
+  const contentBlock = isPdf
+    ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: fileBase64 } }
+    : { type: 'image', source: { type: 'base64', media_type: mediaType, data: fileBase64 } };
+
+  const ingText = await callClaudeAPI({
+    model: CLAUDE_MODEL,
+    max_tokens: 1500,
+    system: MEAL_PLAN_INGREDIENTS_SYSTEM,
+    messages: [{
+      role: 'user',
+      content: [
+        contentBlock,
+        { type: 'text', text: `Finn ingredienslisten for oppskriften "${recipeTitle}" i dette dokumentet. Returner KUN JSON-array.` },
+      ],
+    }],
+  });
+
+  const ingredients = JSON.parse(extractJson(ingText));
+  return Array.isArray(ingredients) ? ingredients : [];
+}
+
+// Kombinert (for bakoverkompatibilitet)
+export async function parseMealPlanFromImage(fileBase64: string, mediaType: string): Promise<MealPlanParseResult> {
+  const recipes = await parseMealPlanTitles(fileBase64, mediaType);
   const recipesWithIngredients: MealPlanRecipe[] = [];
   for (const recipe of recipes) {
-    onProgress?.(`Henter ingredienser for "${recipe.title}"...`);
     try {
-      const ingText = await callClaudeAPI({
-        model: CLAUDE_MODEL,
-        max_tokens: 1500,
-        system: MEAL_PLAN_INGREDIENTS_SYSTEM,
-        messages: [{
-          role: 'user',
-          content: [
-            contentBlock,
-            { type: 'text', text: `Finn ingredienslisten for oppskriften "${recipe.title}" i dette dokumentet. Returner KUN JSON-array.` },
-          ],
-        }],
-      });
-      console.log(`[parseMealPlanFromImage] ingredienser for "${recipe.title}":`, ingText.slice(0, 300));
-      const ingredients = JSON.parse(extractJson(ingText));
-      recipesWithIngredients.push({ ...recipe, ingredients: Array.isArray(ingredients) ? ingredients : [] });
+      const ingredients = await parseMealPlanIngredients(fileBase64, mediaType, recipe.title);
+      recipesWithIngredients.push({ ...recipe, ingredients });
     } catch (e) {
-      console.error(`Kunne ikke hente ingredienser for "${recipe.title}":`, e);
       recipesWithIngredients.push({ ...recipe, ingredients: [] });
     }
   }
-
   return { recipes: recipesWithIngredients };
 }
 

@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { parseMealPlanFromImage, type MealPlanRecipe } from '@/lib/claude';
+import { parseMealPlanTitles, parseMealPlanIngredients, type MealPlanRecipe } from '@/lib/claude';
 
 const C = {
   bg: '#d8fff0', white: '#ffffff', low: '#bffee7', container: '#b2f6de',
@@ -138,7 +138,7 @@ export default function MealPlanScreen() {
   const [mpParsing, setMpParsing] = useState(false);
   const [mpProgress, setMpProgress] = useState<string | null>(null);
   const [mpError, setMpError] = useState<string | null>(null);
-  const [mpParsedRecipes, setMpParsedRecipes] = useState<(MealPlanRecipe & { selected: boolean })[]>([]);
+  const [mpParsedRecipes, setMpParsedRecipes] = useState<(MealPlanRecipe & { selected: boolean; loadingIngredients: boolean })[]>([]);
   const [mpSaving, setMpSaving] = useState(false);
   const [mpDone, setMpDone] = useState(false);
 
@@ -160,17 +160,32 @@ export default function MealPlanScreen() {
         setMpError(null);
         setMpParsedRecipes([]);
 
-        // Start parsing automatisk
+        // Steg 1: Hent titler (raskt) — vis lista umiddelbart
         setMpParsing(true);
-        setMpProgress('Leser fil...');
+        setMpProgress('Leser oppskriftsnavn...');
         try {
-          const result = await parseMealPlanFromImage(b64, mt, setMpProgress);
-          const recipes = Array.isArray(result?.recipes) ? result.recipes : [];
-          if (recipes.length === 0) throw new Error('Fant ingen oppskrifter i filen. Prøv et klarere bilde eller en annen side.');
-          setMpParsedRecipes(recipes.map((r) => ({ ...r, selected: true })));
+          const recipes = await parseMealPlanTitles(b64, mt);
+          const initial = recipes.map((r) => ({ ...r, selected: true, loadingIngredients: true }));
+          setMpParsedRecipes(initial);
+          setMpParsing(false);
+          setMpProgress(null);
+
+          // Steg 2: Hent ingredienser i bakgrunnen, én om gangen
+          for (let i = 0; i < recipes.length; i++) {
+            const recipe = recipes[i];
+            try {
+              const ingredients = await parseMealPlanIngredients(b64, mt, recipe.title);
+              setMpParsedRecipes((prev) =>
+                prev.map((r, idx) => idx === i ? { ...r, ingredients, loadingIngredients: false } : r)
+              );
+            } catch {
+              setMpParsedRecipes((prev) =>
+                prev.map((r, idx) => idx === i ? { ...r, ingredients: [], loadingIngredients: false } : r)
+              );
+            }
+          }
         } catch (err) {
           setMpError(err instanceof Error ? err.message : 'Ukjent feil');
-        } finally {
           setMpParsing(false);
           setMpProgress(null);
         }
@@ -239,6 +254,8 @@ export default function MealPlanScreen() {
     setMpParsing(false);
     setMpProgress(null);
   };
+
+  const mpStillLoadingIngredients = mpParsedRecipes.some((r) => r.loadingIngredients);
 
   const refreshRecipes = useCallback(async () => {
     if (!householdId) return;
@@ -714,15 +731,13 @@ export default function MealPlanScreen() {
                                 <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>
                                   {recipe.title}
                                 </Text>
-                                {recipe.description && (
-                                  <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody, marginTop: 2 } as any} numberOfLines={2}>
-                                    {recipe.description}
-                                  </Text>
-                                )}
                                 <Text style={{ fontSize: 11, color: C.outline, marginTop: 4, fontFamily: C.fontBody } as any}>
                                   {recipe.servings ?? 4} porsjoner
                                 </Text>
                               </View>
+                              {recipe.loadingIngredients && (
+                                <ActivityIndicator size="small" color={C.outline} />
+                              )}
                             </TouchableOpacity>
                           ))}
                         </View>
@@ -748,7 +763,9 @@ export default function MealPlanScreen() {
                           {mpSaving
                             ? <><ActivityIndicator size="small" color={C.white} /><Text style={{ fontSize: 16, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>Lagrer...</Text></>
                             : <Text style={{ fontSize: 16, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>
-                                Lagre {mpParsedRecipes.filter((r) => r.selected).length} oppskrifter
+                                {mpStillLoadingIngredients
+                                  ? `Lagre (henter ingredienser...)`
+                                  : `Lagre ${mpParsedRecipes.filter((r) => r.selected).length} oppskrifter`}
                               </Text>
                           }
                         </TouchableOpacity>
