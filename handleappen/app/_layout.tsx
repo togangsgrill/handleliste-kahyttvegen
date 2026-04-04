@@ -7,7 +7,6 @@ import 'react-native-reanimated';
 import '../global.css';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { ensureAnonymousSession } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Colors } from '@/constants/theme';
@@ -63,10 +62,12 @@ export default function RootLayout() {
   useEffect(() => {
     async function init() {
       try {
-        const session = await ensureAnonymousSession();
-        setSession(session);
+        // Check for existing session (no auto-anonymous anymore)
+        const { data: { session } } = await supabase.auth.getSession();
 
-        if (session) {
+        if (session && !session.user.is_anonymous) {
+          setSession(session);
+
           const { data: user } = await supabase
             .from('users')
             .select('household_id')
@@ -74,6 +75,10 @@ export default function RootLayout() {
             .single();
 
           setHouseholdId(user?.household_id ?? null);
+        } else {
+          // No session or anonymous — user needs to log in
+          setSession(null);
+          setHouseholdId(null);
         }
       } catch (e) {
         console.error('Auth init error:', e);
@@ -83,6 +88,24 @@ export default function RootLayout() {
       }
     }
     init();
+
+    // Listen for auth state changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session && !session.user.is_anonymous) {
+        setSession(session);
+        const { data: user } = await supabase
+          .from('users')
+          .select('household_id')
+          .eq('id', session.user.id)
+          .single();
+        setHouseholdId(user?.household_id ?? null);
+      } else if (event === 'SIGNED_OUT') {
+        setSession(null);
+        setHouseholdId(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [setSession, setHouseholdId, setLoading]);
 
   if (!ready) {

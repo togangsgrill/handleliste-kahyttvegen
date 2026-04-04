@@ -42,6 +42,25 @@
     "save": "Save",
     "edit": "Edit item"
   },
+  "auth": {
+    "login": "Log in",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "login_subtitle": "Log in to see your shopping lists",
+    "register_subtitle": "Create an account to get started",
+    "create_account": "Create account",
+    "fill_fields": "Enter email and password",
+    "fill_name": "Enter your name",
+    "password_min": "Password must be at least 6 characters",
+    "wrong_credentials": "Wrong email or password",
+    "already_registered": "This email is already registered. Try logging in.",
+    "check_email": "Check your email for a confirmation link",
+    "logout": "Log out",
+    "logging_out": "Logging out...",
+    "account": "Account"
+  },
   "settings": {
     "title": "Settings",
     "household_name": "Household",

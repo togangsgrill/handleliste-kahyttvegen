@@ -42,6 +42,25 @@
     "save": "Lagre",
     "edit": "Rediger vare"
   },
+  "auth": {
+    "login": "Logg inn",
+    "register": "Registrer",
+    "email": "E-post",
+    "password": "Passord",
+    "name": "Navn",
+    "login_subtitle": "Logg inn for å se handlelistene dine",
+    "register_subtitle": "Opprett konto for å komme i gang",
+    "create_account": "Opprett konto",
+    "fill_fields": "Fyll inn e-post og passord",
+    "fill_name": "Fyll inn navnet ditt",
+    "password_min": "Passordet må være minst 6 tegn",
+    "wrong_credentials": "Feil e-post eller passord",
+    "already_registered": "Denne e-posten er allerede registrert. Prøv å logge inn.",
+    "check_email": "Sjekk e-posten din for bekreftelseslenke",
+    "logout": "Logg ut",
+    "logging_out": "Logger ut...",
+    "account": "Konto"
+  },
   "settings": {
     "title": "Innstillinger",
     "household_name": "Husholdning",

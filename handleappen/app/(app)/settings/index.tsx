@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { supabase } from '@/lib/supabase';
 import { createHousehold, joinHousehold } from '@/lib/household';
+import { signOut } from '@/lib/auth';
 
 const C = {
   bg: '#d8fff0',
@@ -64,6 +65,13 @@ export default function SettingsScreen() {
   const [savingAllergens, setSavingAllergens] = useState(false);
   const [allergensSaved, setAllergensSaved] = useState(false);
 
+  // Account info
+  const session = useAuthStore((s) => s.session);
+  const setSession = useAuthStore((s) => s.setSession);
+  const [userDisplayName, setUserDisplayName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [loggingOut, setLoggingOut] = useState(false);
+
   // Change household modal
   const [showChangeModal, setShowChangeModal] = useState(false);
   const [changeMode, setChangeMode] = useState<'create' | 'join'>('join');
@@ -73,6 +81,14 @@ export default function SettingsScreen() {
   const [changeError, setChangeError] = useState('');
 
   useEffect(() => {
+    // Fetch user account info
+    if (session?.user) {
+      setUserEmail(session.user.email ?? '');
+      supabase.from('users').select('display_name').eq('id', session.user.id).single().then(({ data }) => {
+        if (data) setUserDisplayName(data.display_name);
+      });
+    }
+
     if (!householdId) return;
     supabase.from('households').select('name, invite_code, allergens').eq('id', householdId).single().then(({ data }) => {
       if (data) { setHouseholdName(data.name); setInviteCode(data.invite_code); setAllergens(data.allergens ?? []); }
@@ -84,7 +100,7 @@ export default function SettingsScreen() {
       .order('created_at', { ascending: false }).limit(10).then(({ data }) => {
         if (data) setActivity(data);
       });
-  }, [householdId]);
+  }, [householdId, session]);
 
   const toggleAllergen = (key: string) => {
     setAllergens((prev) =>
@@ -130,6 +146,21 @@ export default function SettingsScreen() {
       setChangeError(changeMode === 'join' ? 'Ugyldig invitasjonskode. Prøv igjen.' : String(e));
     } finally {
       setChanging(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await signOut();
+      setSession(null);
+      setHouseholdId(null);
+      router.replace('/(auth)/login');
+    } catch (e) {
+      console.error('Logout error:', e);
+      Alert.alert('Feil', 'Kunne ikke logge ut. Prøv igjen.');
+    } finally {
+      setLoggingOut(false);
     }
   };
 
@@ -288,7 +319,7 @@ export default function SettingsScreen() {
 
         {/* Recent activity */}
         {activity.length > 0 && (
-          <View style={[{ backgroundColor: C.white, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: C.outline + '33' }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
+          <View style={[{ backgroundColor: C.white, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 } as any}>
               <MaterialIcons name="history" size={20} color={C.primary} />
               <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Siste aktivitet</Text>
@@ -313,6 +344,49 @@ export default function SettingsScreen() {
             ))}
           </View>
         )}
+
+        {/* Account / Logout */}
+        <View style={[{ backgroundColor: C.white, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: C.outline + '33' }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 } as any}>
+            <MaterialIcons name="person" size={20} color={C.primary} />
+            <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Konto</Text>
+          </View>
+
+          <View style={{ gap: 12, marginBottom: 20 } as any}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, backgroundColor: C.low, borderRadius: 16 } as any}>
+              <View style={{ width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', backgroundColor: C.primary }}>
+                <Text style={{ color: '#ffffff', fontSize: 17, fontWeight: '700' } as any}>
+                  {(userDisplayName || userEmail || '?').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>
+                  {userDisplayName || 'Bruker'}
+                </Text>
+                <Text style={{ fontSize: 13, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
+                  {userEmail || 'Ingen e-post'}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleLogout}
+            disabled={loggingOut}
+            activeOpacity={0.8}
+            style={{
+              paddingVertical: 14, borderRadius: 14, alignItems: 'center',
+              backgroundColor: 'rgba(179,27,37,0.08)',
+              flexDirection: 'row', justifyContent: 'center', gap: 8,
+              borderWidth: 1, borderColor: 'rgba(179,27,37,0.15)',
+            } as any}
+          >
+            <MaterialIcons name="logout" size={18} color={C.error} />
+            <Text style={{ fontSize: 15, fontWeight: '700', color: C.error, fontFamily: C.fontBody } as any}>
+              {loggingOut ? 'Logger ut...' : 'Logg ut'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Change household modal */}
