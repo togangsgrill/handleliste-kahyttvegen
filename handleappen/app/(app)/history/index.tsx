@@ -275,14 +275,14 @@ export default function HistoryScreen() {
 
         <View style={{ marginBottom: 24 }}>
           <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: C.textSec, marginBottom: 8, textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Historikk</Text>
-          <Text style={{ fontSize: 32, fontWeight: '800', color: C.text, letterSpacing: -1, fontFamily: C.font } as any}>Handlehistorikk</Text>
+          <Text style={{ fontSize: 28, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>Handlehistorikk</Text>
           <Text style={{ fontSize: 16, color: C.textSec, marginTop: 6, fontFamily: C.fontBody } as any}>Dine handleturer</Text>
         </View>
 
         {/* Pending visit */}
         {pendingVisit && (
           <View style={[{
-            backgroundColor: C.primary, borderRadius: 24, padding: 24, marginBottom: 24, gap: 16,
+            backgroundColor: C.primary, borderRadius: 16, padding: 24, marginBottom: 24, gap: 16,
           }, isWeb ? { boxShadow: '0px 20px 40px rgba(0,105,71,0.25)' } as any : {}]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 } as any}>
               <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' }}>

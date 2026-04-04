@@ -191,7 +191,7 @@ export default function SettingsScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 } as any}>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: C.textSec, marginBottom: 8, textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Innstillinger</Text>
-            <Text style={{ fontSize: 32, fontWeight: '800', color: C.text, letterSpacing: -1, fontFamily: C.font } as any}>Innstillinger</Text>
+            <Text style={{ fontSize: 28, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>Innstillinger</Text>
             <Text style={{ fontSize: 16, color: C.textSec, marginTop: 6, fontFamily: C.fontBody } as any}>{householdName || 'Laster...'}</Text>
           </View>
           <TouchableOpacity
@@ -205,7 +205,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Members */}
-        <View style={[{ backgroundColor: C.white, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
+        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 } as any}>
             <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Aktive medlemmer</Text>
             <View style={{ backgroundColor: C.primaryContainer, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 9999 }}>
@@ -245,7 +245,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Invite card */}
-        <View style={[{ backgroundColor: C.white, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 20px 40px rgba(0,54,42,0.08)' } as any : {}]}>
+        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 20px 40px rgba(0,54,42,0.08)' } as any : {}]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 } as any}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, marginBottom: 6, fontFamily: C.font } as any}>Inviter til husholdning</Text>
@@ -265,7 +265,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Allergener */}
-        <View style={[{ backgroundColor: C.white, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
+        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 } as any}>
             <MaterialIcons name="warning-amber" size={20} color={C.primary} />
             <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Allergier og intoleranser</Text>
@@ -319,7 +319,7 @@ export default function SettingsScreen() {
 
         {/* Recent activity */}
         {activity.length > 0 && (
-          <View style={[{ backgroundColor: C.white, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
+          <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 } as any}>
               <MaterialIcons name="history" size={20} color={C.primary} />
               <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Siste aktivitet</Text>
@@ -346,7 +346,7 @@ export default function SettingsScreen() {
         )}
 
         {/* Account / Logout */}
-        <View style={[{ backgroundColor: C.white, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: C.outline + '33' }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
+        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: C.outline + '33' }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 } as any}>
             <MaterialIcons name="person" size={20} color={C.primary} />
             <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Konto</Text>

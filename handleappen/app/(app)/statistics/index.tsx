@@ -293,7 +293,7 @@ export default function StatisticsScreen() {
 
   const cardStyle = {
     backgroundColor: color.surfaceContainerLowest,
-    borderRadius: 24,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: color.outlineVariant + '33',
     ...(isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } : {}),
@@ -326,7 +326,7 @@ export default function StatisticsScreen() {
         }}
       >
         <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: color.outline, marginBottom: 8, textTransform: 'uppercase', fontFamily: font.body }}>Statistikk</Text>
-        <Text style={{ fontSize: 32, fontWeight: '800', color: color.onSurface, letterSpacing: -1, fontFamily: font.headline }}>Oversikt</Text>
+        <Text style={{ fontSize: 28, fontWeight: '800', color: color.onSurface, letterSpacing: -0.5, fontFamily: font.headline }}>Oversikt</Text>
         <Text style={{ fontSize: 16, color: color.onSurfaceVariant, marginTop: 6, marginBottom: 24, fontFamily: font.body }}>Din handleprofil</Text>
 
         {/* ===== GAMIFICATION HERO ===== */}
@@ -335,7 +335,7 @@ export default function StatisticsScreen() {
 
             {/* Hovedkort: dager siden sist */}
             <View style={{
-              borderRadius: 24, padding: 28,
+              borderRadius: 16, padding: 28,
               backgroundColor: color.surfaceContainerLowest,
               borderWidth: 1, borderColor: color.outlineVariant + '33',
               ...(isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.06)' } : {}),

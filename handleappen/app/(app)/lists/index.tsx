@@ -65,7 +65,7 @@ const ListCard = memo(function ListCard({ item, itemCount, onDelete }: {
     <TouchableOpacity
       style={[{
         backgroundColor: C.white,
-        borderRadius: 24, padding: 16,
+        borderRadius: 16, padding: 16,
         flexDirection: 'row', alignItems: 'center', gap: 14,
       }, isWeb ? ({ boxShadow: '0px 2px 10px rgba(0,54,42,0.06)' } as any) : {}]}
       onPress={() => router.push(`/(app)/lists/${item.id}`)}
@@ -249,7 +249,7 @@ export default function ListsScreen() {
         {/* Hilsen */}
         <View style={{ marginBottom: 32 }}>
           <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: C.textSec, marginBottom: 8, textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Lister</Text>
-          <Text style={{ fontSize: 32, fontWeight: '800', color: C.text, letterSpacing: -1, fontFamily: C.font } as any}>
+          <Text style={{ fontSize: 28, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>
             {greeting} 👋
           </Text>
           <Text style={{ fontSize: 16, color: C.textSec, marginTop: 6, fontFamily: C.fontBody } as any}>
