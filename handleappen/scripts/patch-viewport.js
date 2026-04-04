@@ -30,10 +30,12 @@ if (!html.includes(after)) {
 // 1b. Fix height and tab bar positioning for iOS PWA standalone
 const heightFix = `
     <style id="pwa-height-fix">
-      html, body, #root { height: 100%; }
+      html, body, #root { height: 100%; overflow: hidden; }
       @supports (height: 100dvh) {
         html, body, #root { height: 100dvh; }
       }
+      /* Prevent iOS PWA from showing Safari toolbar on scroll */
+      body { overscroll-behavior: none; -webkit-overflow-scrolling: auto; }
     </style>`;
 if (!html.includes('pwa-height-fix')) {
   html = html.replace('</head>', heightFix + '\n  </head>');
