@@ -28,6 +28,8 @@ export default function AppLayout() {
             boxShadow: '0 -10px 40px rgba(0,54,42,0.08)',
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+            height: 'calc(68px + env(safe-area-inset-bottom))',
           } as any : {}),
         },
         tabBarLabelStyle: {

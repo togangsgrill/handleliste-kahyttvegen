@@ -30,6 +30,12 @@
     box-shadow: 0 -10px 40px rgba(0, 54, 42, 0.08);
   }
 
+  /* Safe area for tab bar on mobile browsers (iOS Safari) */
+  .tab-bar-safe {
+    padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    height: calc(68px + env(safe-area-inset-bottom)) !important;
+  }
+
   .glass-card {
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(8px);
