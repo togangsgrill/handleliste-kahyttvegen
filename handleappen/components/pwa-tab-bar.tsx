@@ -29,7 +29,7 @@ export function PWATabBar({ state, navigation }: BottomTabBarProps) {
         flexDirection: 'row' as const,
         alignItems: 'flex-start' as const,
         paddingTop: 8,
-        paddingBottom: 'env(safe-area-inset-bottom, 8px)' as any,
+        paddingBottom: 'max(4px, calc(env(safe-area-inset-bottom, 8px) - 16px))' as any,
         backdropFilter: 'blur(40px)',
         WebkitBackdropFilter: 'blur(40px)',
         boxShadow: '0 -8px 32px rgba(0,54,42,0.08)',
