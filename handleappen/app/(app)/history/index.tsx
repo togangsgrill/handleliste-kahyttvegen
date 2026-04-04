@@ -145,7 +145,7 @@ function TripSheet({ trip, onClose }: { trip: Trip | null; onClose: () => void }
                     { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, paddingHorizontal: 16 } as any,
                     i < items.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(0,54,42,0.07)' } : {},
                   ]}>
-                    <Text style={{ flex: 1, fontSize: 14, fontWeight: '500', color: C.text, fontFamily: C.fontBody, textTransform: 'capitalize' } as any}>
+                    <Text style={{ flex: 1, fontSize: 15, fontWeight: '500', color: C.text, fontFamily: C.fontBody, textTransform: 'capitalize' } as any}>
                       {item.item_name}
                     </Text>
                     <Text style={{ fontSize: 14, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>
@@ -340,7 +340,7 @@ export default function HistoryScreen() {
         {/* Søkeresultater */}
         {searched && (
           <View style={[{
-            backgroundColor: C.white, borderRadius: 20, overflow: 'hidden',
+            backgroundColor: C.white, borderRadius: 16, overflow: 'hidden',
             borderWidth: 1, borderColor: C.outline + '33', marginBottom: 24,
           }, isWeb ? { boxShadow: '0px 8px 24px rgba(0,54,42,0.06)' } as any : {}]}>
             <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.outline + '22' }}>
@@ -404,7 +404,7 @@ export default function HistoryScreen() {
                       onPress={() => setSelectedTrip(trip)}
                       activeOpacity={0.75}
                       style={[{
-                        backgroundColor: C.white, borderRadius: 18, padding: 16,
+                        backgroundColor: C.white, borderRadius: 16, padding: 16,
                         flexDirection: 'row', alignItems: 'center', gap: 14,
                       }, isWeb ? { boxShadow: '0px 4px 12px rgba(0,54,42,0.04)' } as any : {}]}
                     >
@@ -412,8 +412,8 @@ export default function HistoryScreen() {
                         <MaterialIcons name="shopping-basket" size={20} color={C.primary} />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>{trip.butikk}</Text>
-                        <Text style={{ fontSize: 12, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
+                        <Text style={{ fontSize: 16, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>{trip.butikk}</Text>
+                        <Text style={{ fontSize: 14, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
                           {formatDate(trip.dato)} · {trip.antall_varer} varer
                         </Text>
                       </View>

@@ -89,7 +89,7 @@ const ListCard = memo(function ListCard({ item, itemCount, onDelete }: {
           )}
         </View>
 
-        <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody, marginBottom: total > 0 ? 8 : 0 } as any}>
+        <Text style={{ fontSize: 14, color: C.textSec, fontFamily: C.fontBody, marginBottom: total > 0 ? 8 : 0 } as any}>
           {total === 0
             ? 'Tom liste'
             : isComplete
@@ -114,9 +114,9 @@ const ListCard = memo(function ListCard({ item, itemCount, onDelete }: {
       {/* Høyre: status-badge + meny */}
       <View style={{ alignItems: 'flex-end', gap: 6, flexShrink: 0 } as any}>
         {isActive && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 } as any}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.primary }} />
-            <Text style={{ fontSize: 10, fontWeight: '700', color: C.primary, textTransform: 'uppercase', letterSpacing: 1, fontFamily: C.fontBody } as any}>I gang</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.primary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 } as any}>
+            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: '#ffffff' }} />
+            <Text style={{ fontSize: 10, fontWeight: '700', color: '#ffffff', textTransform: 'uppercase', letterSpacing: 1, fontFamily: C.fontBody } as any}>I gang</Text>
           </View>
         )}
         {isComplete && (
@@ -260,7 +260,19 @@ export default function ListsScreen() {
         </View>
 
         {/* Lister */}
-        {lists.length === 0 && !isLoading ? (
+        {isLoading ? (
+          <View style={{ gap: 10, marginBottom: 32 } as any}>
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={[{ backgroundColor: C.white, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, opacity: 1 - i * 0.2 }, isWeb ? ({ boxShadow: '0px 2px 10px rgba(0,54,42,0.06)' } as any) : {}]}>
+                <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: C.low }} />
+                <View style={{ flex: 1, gap: 8 } as any}>
+                  <View style={{ height: 16, borderRadius: 6, backgroundColor: C.low, width: '60%' } as any} />
+                  <View style={{ height: 12, borderRadius: 6, backgroundColor: C.low, width: '40%' } as any} />
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : lists.length === 0 ? (
           <View style={{ alignItems: 'center', paddingTop: 40, gap: 12, marginBottom: 40 } as any}>
             <MaterialIcons name="playlist-add" size={56} color="rgba(0,105,71,0.15)" />
             <Text style={{ fontSize: 18, fontWeight: '600', color: C.text, fontFamily: C.font } as any}>{t('lists.empty')}</Text>

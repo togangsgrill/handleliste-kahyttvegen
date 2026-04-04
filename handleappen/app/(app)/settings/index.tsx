@@ -235,7 +235,7 @@ export default function SettingsScreen() {
                       </Text>
                     </View>
                   </View>
-                  <Text style={{ fontSize: 12, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
+                  <Text style={{ fontSize: 14, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
                     {member.auth_provider === 'anonymous' ? 'Anonym bruker' : 'Registrert'}
                   </Text>
                 </View>
@@ -249,7 +249,7 @@ export default function SettingsScreen() {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 } as any}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, marginBottom: 6, fontFamily: C.font } as any}>Inviter til husholdning</Text>
-              <Text style={{ fontSize: 14, color: C.textSec, lineHeight: 20, maxWidth: 240, fontFamily: C.fontBody } as any}>Del invitasjonskoden med familie og venner.</Text>
+              <Text style={{ fontSize: 15, color: C.textSec, lineHeight: 22, maxWidth: 240, fontFamily: C.fontBody } as any}>Del invitasjonskoden med familie og venner.</Text>
             </View>
             <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: C.primaryContainer + '33', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: C.primaryContainer + '66' }}>
               <MaterialIcons name="share" size={20} color={C.primary} />
