@@ -104,14 +104,13 @@ export function StitchAppBar({ onBack, title, showSearch, showNotifications }: S
 
   // On web: use CSS glass effect. On native: use BlurView
   if (Platform.OS === 'web') {
-    const barHeight = insets.top + 72; // paddingTop + paddingVertical*2 + icon
     return (
       <>
-        {/* Spacer so content is not hidden behind the fixed bar */}
-        <View style={{ height: barHeight }} />
+        {/* Spacer: 72px content + safe area top via CSS */}
+        <View style={{ height: 72, marginTop: 'env(safe-area-inset-top, 0px)' } as any} />
         <View
           style={{
-            paddingTop: insets.top,
+            paddingTop: 'env(safe-area-inset-top, 0px)',
             backgroundColor: 'rgba(236,253,245,0.92)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
