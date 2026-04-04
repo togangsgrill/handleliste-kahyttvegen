@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { PWATabBar } from '@/components/pwa-tab-bar';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 export default function AppLayout() {
@@ -16,6 +17,7 @@ export default function AppLayout() {
 
   return (
     <Tabs
+      tabBar={Platform.OS === 'web' ? (props) => <PWATabBar {...props} /> : undefined}
       screenOptions={{
         tabBarActiveTintColor: '#006947',
         tabBarInactiveTintColor: 'rgba(76,129,112,0.7)',
@@ -28,15 +30,6 @@ export default function AppLayout() {
           paddingBottom: Platform.OS === 'ios' ? 24 : 12,
           paddingTop: 10,
           height: Platform.OS === 'ios' ? 84 : 68,
-          ...(Platform.OS === 'web' ? {
-            backdropFilter: 'blur(40px)',
-            WebkitBackdropFilter: 'blur(40px)',
-            boxShadow: '0 -10px 40px rgba(0,54,42,0.08)',
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-            height: 'calc(68px + env(safe-area-inset-bottom))',
-          } as any : {}),
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -44,9 +37,6 @@ export default function AppLayout() {
           letterSpacing: 1,
           textTransform: 'uppercase',
           marginTop: 2,
-          ...(Platform.OS === 'web' ? {
-            fontFamily: "'Manrope', system-ui, sans-serif",
-          } as any : {}),
         },
         tabBarItemStyle: {
           paddingVertical: 4,
