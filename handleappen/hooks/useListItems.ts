@@ -5,6 +5,15 @@ import type { Database } from '@/types/database';
 
 type ListItem = Database['public']['Tables']['list_items']['Row'];
 
+function normalizeName(raw: string): string {
+  const n = raw
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/\s+\d+[\d.,]*\s*(g|kg|ml|l|dl|cl|pk|stk|x\d+)$/i, '')
+    .toLowerCase();
+  return n.charAt(0).toUpperCase() + n.slice(1);
+}
+
 export function useListItems(listId: string | undefined) {
   const [items, setItems] = useState<ListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,15 +62,27 @@ export function useListItems(listId: string | undefined) {
     };
   }, [listId, fetchItems]);
 
-  const addItem = async (name: string) => {
+  const addItem = async (
+    name: string,
+    quantity = 1,
+    categoryId?: string,
+    kassalMeta?: { barcode?: string; imageUrl?: string; weight?: number | null; weightUnit?: string | null }
+  ) => {
     const userId = useAuthStore.getState().userId;
     if (!listId || !userId) return;
 
+    const normalized = normalizeName(name);
+
     const { error } = await supabase.from('list_items').insert({
       list_id: listId,
-      name: name.trim(),
+      name: normalized,
       added_by: userId,
-      quantity: 1,
+      quantity,
+      ...(categoryId ? { category_id: categoryId } : {}),
+      ...(kassalMeta?.barcode ? { barcode: kassalMeta.barcode } : {}),
+      ...(kassalMeta?.imageUrl ? { image_url: kassalMeta.imageUrl } : {}),
+      ...(kassalMeta?.weight != null ? { weight: kassalMeta.weight } : {}),
+      ...(kassalMeta?.weightUnit ? { weight_unit: kassalMeta.weightUnit } : {}),
     });
 
     if (error) throw error;
@@ -71,7 +92,7 @@ export function useListItems(listId: string | undefined) {
       list_id: listId,
       user_id: userId,
       action: 'added',
-      item_name: name.trim(),
+      item_name: normalized,
     });
   };
 

@@ -235,6 +235,23 @@ Alle tabeller i Supabase (PostgreSQL). RLS aktivert på alle tabeller. `updated_
 **`recipes`** — oppskrifter med kilde, AI-beskrivelse, porsjonering
 **`recipe_ingredients`** — ingredienser per oppskrift med enhet og kategori
 
+### 4.7 Ukesmeny
+
+**`meal_plan`**
+
+| Kolonne | Type | Beskrivelse |
+|---------|------|-------------|
+| id | uuid PK | |
+| household_id | uuid FK | |
+| week_start | date | Mandag i uken (YYYY-MM-DD) |
+| day_of_week | int | 0=Man … 6=Søn |
+| meal_type | text | 'dinner' \| 'lunch' \| 'breakfast' \| 'other' |
+| recipe_id | uuid FK | Referanse til recipes (nullable) |
+| custom_name | text | Fritekst hvis ingen oppskrift |
+| servings | int | Antall porsjoner |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
 ---
 
 ## 5. Byggerekkefølge

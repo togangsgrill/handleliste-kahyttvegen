@@ -1,36 +1,47 @@
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function AppLayout() {
-  const colorScheme = useColorScheme();
   const { t } = useTranslation();
-  const colors = Colors[colorScheme ?? 'light'];
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.tint,
-        tabBarInactiveTintColor: colors.tabIconDefault,
+        tabBarActiveTintColor: '#006947',
+        tabBarInactiveTintColor: 'rgba(76,129,112,0.7)',
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: 'rgba(47, 101, 85, 0.15)',
+          backgroundColor: 'rgba(255,255,255,0.8)',
+          borderTopColor: 'rgba(167,241,216,0.1)',
           borderTopWidth: 1,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 60,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+          paddingTop: 10,
+          height: Platform.OS === 'ios' ? 84 : 68,
+          ...(Platform.OS === 'web' ? {
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            boxShadow: '0 -10px 40px rgba(0,54,42,0.08)',
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+          } as any : {}),
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: '700',
-          letterSpacing: 0.5,
+          letterSpacing: 1,
           textTransform: 'uppercase',
+          marginTop: 2,
+          ...(Platform.OS === 'web' ? {
+            fontFamily: "'Manrope', system-ui, sans-serif",
+          } as any : {}),
+        },
+        tabBarItemStyle: {
+          paddingVertical: 4,
         },
       }}
     >

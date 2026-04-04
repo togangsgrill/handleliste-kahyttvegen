@@ -1,0 +1,997 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  Text, TouchableOpacity, View, ScrollView, Modal, Platform,
+  ActivityIndicator, Image,
+} from 'react-native';
+import { router, Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { parseMealPlanFromImage, generateRecipeIngredients, type MealPlanRecipe } from '@/lib/claude';
+
+const C = {
+  bg: '#d8fff0', white: '#ffffff', low: '#bffee7', container: '#b2f6de',
+  high: '#a7f1d8', primary: '#006947', primaryContainer: '#00feb2',
+  text: '#00362a', textSec: '#2f6555', outline: '#81b8a5',
+  error: '#b31b25',
+  font: Platform.OS === 'web' ? "'Plus Jakarta Sans', system-ui, sans-serif" : undefined,
+  fontBody: Platform.OS === 'web' ? "'Manrope', system-ui, sans-serif" : undefined,
+};
+const isWeb = Platform.OS === 'web';
+
+const DAYS = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
+const DAYS_FULL = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag', 'Søndag'];
+
+interface Recipe {
+  id: string;
+  name: string;
+  base_servings: number;
+  source_label: string | null;
+  description: string | null;
+}
+
+interface RecipeIngredient {
+  name: string;
+  quantity: number;
+  unit: string | null;
+}
+
+interface MealSlot {
+  id?: string;
+  day_of_week: number;
+  recipe_id: string | null;
+  recipe?: Recipe;
+  custom_name: string | null;
+  servings: number;
+}
+
+interface ShoppingList {
+  id: string;
+  name: string;
+}
+
+// Normaliserer varenavn for sammenligning
+function normalizeName(n: string) {
+  return n.toLowerCase().trim();
+}
+
+// Basisvarer de fleste har hjemme — brukes til opt-out
+const STAPLE_KEYWORDS = [
+  'olje', 'olivenolje', 'rapsolje', 'nøytral olje', 'smør', 'salt', 'pepper',
+  'sukker', 'mel', 'hvitløk', 'løk', 'vann', 'buljong', 'kraft',
+  'soyasaus', 'eddik', 'balsamico', 'tomatpuré', 'bakepulver', 'vaniljesukker',
+  'kanel', 'muskat', 'paprika', 'oregano', 'timian', 'laurbærblad',
+];
+function isStaple(name: string): boolean {
+  const n = name.toLowerCase().trim();
+  return STAPLE_KEYWORDS.some((kw) => n === kw || n.includes(kw));
+}
+
+// Beregn mandag i inneværende uke
+function getWeekStart(offset = 0): Date {
+  const now = new Date();
+  const day = now.getDay(); // 0=søn
+  const diff = (day === 0 ? -6 : 1 - day) + offset * 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
+function formatWeekStart(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function weekLabel(d: Date): string {
+  const end = new Date(d);
+  end.setDate(d.getDate() + 6);
+  return `${d.getDate()}. ${d.toLocaleDateString('nb-NO', { month: 'short' })} – ${end.getDate()}. ${end.toLocaleDateString('nb-NO', { month: 'short' })}`;
+}
+
+function IngredientRow({ ing, onToggle }: { ing: { name: string; quantity: number; unit: string | null; recipeNames: string[]; skip: boolean }; onToggle: () => void }) {
+  return (
+    <TouchableOpacity onPress={onToggle} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, opacity: ing.skip ? 0.45 : 1 } as any}>
+      <View style={{
+        width: 24, height: 24, borderRadius: 7,
+        backgroundColor: ing.skip ? 'transparent' : C.primary,
+        borderWidth: ing.skip ? 2 : 0,
+        borderColor: C.outline + '66',
+        alignItems: 'center', justifyContent: 'center',
+      }}>
+        {!ing.skip && <MaterialIcons name="check" size={15} color={C.white} />}
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 15, fontWeight: '600', color: C.text, textTransform: 'capitalize', fontFamily: C.fontBody } as any}>
+          {ing.name}
+        </Text>
+        <Text style={{ fontSize: 11, color: C.textSec, fontFamily: C.fontBody } as any}>
+          {ing.quantity % 1 === 0 ? ing.quantity : ing.quantity.toFixed(1)}{ing.unit ? ` ${ing.unit}` : ''} · fra {ing.recipeNames.join(', ')}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+export default function MealPlanScreen() {
+  const insets = useSafeAreaInsets();
+  const householdId = useAuthStore((s) => s.householdId);
+
+  const [weekOffset, setWeekOffset] = useState(0);
+  const weekStart = getWeekStart(weekOffset);
+  const weekStartStr = formatWeekStart(weekStart);
+
+  const [slots, setSlots] = useState<MealSlot[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Velg-oppskrift-modal
+  const [pickingDay, setPickingDay] = useState<number | null>(null);
+
+  // Ukesmeny-import fra bilde
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [showMealPlanImport, setShowMealPlanImport] = useState(false);
+  const [mpImageUri, setMpImageUri] = useState<string | null>(null);
+  const [mpImageBase64, setMpImageBase64] = useState<string | null>(null);
+  const [mpImageMediaType, setMpImageMediaType] = useState('image/jpeg');
+  const [mpParsing, setMpParsing] = useState(false);
+  const [mpError, setMpError] = useState<string | null>(null);
+  const [mpParsedRecipes, setMpParsedRecipes] = useState<(MealPlanRecipe & { selected: boolean })[]>([]);
+  const [mpSaving, setMpSaving] = useState(false);
+  const [mpDone, setMpDone] = useState(false);
+
+  const openMealPlanFilePicker = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,application/pdf';
+    input.addEventListener('change', async (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target?.result as string;
+        const [header, b64] = dataUrl.split(',');
+        const mt = header.match(/:(.*?);/)?.[1] ?? 'image/jpeg';
+        setMpImageUri(dataUrl);
+        setMpImageBase64(b64);
+        setMpImageMediaType(mt);
+        setMpError(null);
+        setMpParsedRecipes([]);
+
+        // Start parsing automatisk
+        setMpParsing(true);
+        try {
+          const result = await parseMealPlanFromImage(b64, mt);
+          const recipes = Array.isArray(result?.recipes) ? result.recipes : [];
+          if (recipes.length === 0) throw new Error('Fant ingen oppskrifter i filen. Prøv et klarere bilde eller en annen side.');
+          setMpParsedRecipes(recipes.map((r) => ({ ...r, selected: true })));
+        } catch (err) {
+          setMpError(err instanceof Error ? err.message : 'Ukjent feil');
+        } finally {
+          setMpParsing(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    input.click();
+  };
+
+  const handleMealPlanSave = async () => {
+    if (!householdId) return;
+    setMpSaving(true);
+    const selected = mpParsedRecipes.filter((r) => r.selected);
+
+    for (const recipe of selected) {
+      // Sjekk om oppskriften allerede finnes (unngå duplikater)
+      const { data: existingRecipe } = await supabase.from('recipes')
+        .select('id')
+        .eq('household_id', householdId)
+        .ilike('name', recipe.title)
+        .maybeSingle();
+
+      if (!existingRecipe) {
+        await supabase.from('recipes').insert({
+          household_id: householdId,
+          name: recipe.title,
+          base_servings: recipe.servings ?? 4,
+          source_type: 'unknown',
+          source_label: 'Ukesmeny',
+          description: recipe.description ?? null,
+          description_is_ai: true,
+        });
+      }
+    }
+
+    // Oppdater oppskriftslisten
+    const { data: updatedRecipes } = await supabase.from('recipes').select('id, name, base_servings, source_label, description')
+      .eq('household_id', householdId).order('name');
+    setRecipes(updatedRecipes ?? []);
+
+    setMpSaving(false);
+    setMpDone(true);
+  };
+
+  const resetMealPlanImport = () => {
+    setMpImageUri(null);
+    setMpImageBase64(null);
+    setMpParsedRecipes([]);
+    setMpError(null);
+    setMpDone(false);
+    setMpParsing(false);
+  };
+
+  const refreshRecipes = useCallback(async () => {
+    if (!householdId) return;
+    const { data } = await supabase.from('recipes').select('id, name, base_servings, source_label, description')
+      .eq('household_id', householdId).order('name');
+    setRecipes(data ?? []);
+  }, [householdId]);
+
+  // Import-modal
+  const [showImport, setShowImport] = useState(false);
+  const [importIngredients, setImportIngredients] = useState<
+    { name: string; quantity: number; unit: string | null; recipeNames: string[]; alreadyOnList: boolean; skip: boolean; is_staple: boolean }[]
+  >([]);
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importDone, setImportDone] = useState(false);
+
+  const loadWeek = useCallback(async () => {
+    if (!householdId) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from('meal_plan')
+      .select('id, day_of_week, recipe_id, custom_name, servings, recipes(id, name, base_servings, source_label, description)')
+      .eq('household_id', householdId)
+      .eq('week_start', weekStartStr);
+
+    const filled: MealSlot[] = DAYS.map((_, i) => {
+      const found = (data ?? []).find((r: any) => r.day_of_week === i);
+      return found
+        ? { id: found.id, day_of_week: i, recipe_id: found.recipe_id, recipe: found.recipes ?? undefined, custom_name: found.custom_name, servings: found.servings }
+        : { day_of_week: i, recipe_id: null, custom_name: null, servings: 4 };
+    });
+    setSlots(filled);
+    setLoading(false);
+  }, [householdId, weekStartStr]);
+
+  useEffect(() => { loadWeek(); }, [loadWeek]);
+
+  useEffect(() => {
+    if (!householdId) return;
+    supabase.from('recipes').select('id, name, base_servings, source_label, description')
+      .eq('household_id', householdId).order('name')
+      .then(({ data }) => setRecipes(data ?? []));
+
+    supabase.from('shopping_lists').select('id, name')
+      .eq('household_id', householdId).eq('is_deleted', false).order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setShoppingLists(data ?? []);
+        if (data && data.length > 0) setSelectedListId(data[0].id);
+      });
+  }, [householdId]);
+
+  const assignRecipe = async (dayIndex: number, recipe: Recipe | null) => {
+    if (!householdId) return;
+    const existing = slots[dayIndex];
+
+    if (recipe === null) {
+      // Fjern
+      if (existing.id) {
+        await supabase.from('meal_plan').delete().eq('id', existing.id);
+      }
+    } else {
+      const payload = {
+        household_id: householdId,
+        week_start: weekStartStr,
+        day_of_week: dayIndex,
+        meal_type: 'dinner',
+        recipe_id: recipe.id,
+        custom_name: null,
+        servings: recipe.base_servings,
+      };
+      if (existing.id) {
+        await supabase.from('meal_plan').update(payload).eq('id', existing.id);
+      } else {
+        await supabase.from('meal_plan').insert(payload);
+      }
+    }
+    setPickingDay(null);
+    loadWeek();
+  };
+
+  const [generatingIngredients, setGeneratingIngredients] = useState(false);
+
+  const prepareImport = async () => {
+    if (!selectedListId) return;
+    setGeneratingIngredients(true);
+    setShowImport(true);
+
+    try {
+      // Hent eksisterende varer på listen
+      const { data: existingItems } = await supabase
+        .from('list_items')
+        .select('name')
+        .eq('list_id', selectedListId)
+        .eq('is_deleted', false);
+      const existingNames = new Set((existingItems ?? []).map((i: any) => normalizeName(i.name)));
+
+      // Hent husholdningens allergener
+      const { data: hh } = await supabase.from('households').select('allergens').eq('id', householdId!).single();
+      const allergens: string[] = hh?.allergens ?? [];
+
+      // Hent alle ingredienser fra planlagte oppskrifter
+      const recipesWithSlots = slots.filter((s) => s.recipe_id && s.recipe);
+      const allIngredients: { name: string; quantity: number; unit: string | null; recipeName: string; servings: number; baseServings: number; is_staple: boolean }[] = [];
+
+      for (const slot of recipesWithSlots) {
+        // Sjekk om oppskriften allerede har ingredienser
+        const { data: ings } = await supabase
+          .from('recipe_ingredients')
+          .select('name, quantity, unit')
+          .eq('recipe_id', slot.recipe_id!);
+
+        let ingredients = ings ?? [];
+
+        // Hvis ingen ingredienser finnes, generer dem via Claude og lagre
+        if (ingredients.length === 0) {
+          try {
+            const generated = await generateRecipeIngredients(
+              slot.recipe!.name,
+              slot.recipe!.base_servings || 4,
+              allergens
+            );
+            if (generated.length > 0) {
+              // Lagre i recipe_ingredients (tabellen har ikke is_staple-kolonne)
+              const rows = generated.map((g) => ({
+                recipe_id: slot.recipe_id!,
+                name: g.name,
+                quantity: g.quantity,
+                unit: g.unit,
+              }));
+              const { error } = await supabase.from('recipe_ingredients').insert(rows);
+              if (error) console.error('Feil ved lagring av ingredienser:', error);
+              else ingredients = generated;
+            }
+          } catch (e) {
+            console.error(`Kunne ikke generere ingredienser for ${slot.recipe!.name}:`, e);
+          }
+        }
+
+        for (const ing of ingredients) {
+          const scale = slot.servings / (slot.recipe!.base_servings || 4);
+          allIngredients.push({
+            name: ing.name,
+            quantity: ing.quantity * scale,
+            unit: ing.unit,
+            recipeName: slot.recipe!.name,
+            servings: slot.servings,
+            baseServings: slot.recipe!.base_servings,
+            is_staple: isStaple(ing.name),
+          });
+        }
+      }
+
+    // Aggreger: slå sammen like ingredienser
+    const merged = new Map<string, { name: string; quantity: number; unit: string | null; recipeNames: string[]; is_staple: boolean }>();
+    for (const ing of allIngredients) {
+      const key = normalizeName(ing.name);
+      if (merged.has(key)) {
+        const existing = merged.get(key)!;
+        existing.quantity += ing.quantity;
+        if (!existing.recipeNames.includes(ing.recipeName)) existing.recipeNames.push(ing.recipeName);
+      } else {
+        merged.set(key, { name: ing.name, quantity: ing.quantity, unit: ing.unit, recipeNames: [ing.recipeName], is_staple: ing.is_staple });
+      }
+    }
+
+    setImportIngredients(
+      [...merged.values()].map((ing) => ({
+        ...ing,
+        alreadyOnList: existingNames.has(normalizeName(ing.name)),
+        // Basisvarer og varer som allerede er på listen: skip som standard
+        skip: ing.is_staple || existingNames.has(normalizeName(ing.name)),
+      }))
+    );
+    setImportDone(false);
+    } finally {
+      setGeneratingIngredients(false);
+    }
+  };
+
+  const doImport = async () => {
+    if (!selectedListId) return;
+    setImporting(true);
+
+    const toAdd = importIngredients.filter((i) => !i.skip);
+    for (const ing of toAdd) {
+      // Sjekk om varen allerede finnes på listen (kan ha blitt lagt til siden vi sjekket)
+      const { data: existing } = await supabase
+        .from('list_items')
+        .select('id, quantity')
+        .eq('list_id', selectedListId)
+        .ilike('name', ing.name)
+        .eq('is_deleted', false)
+        .maybeSingle();
+
+      if (existing) {
+        // Øk antallet
+        await supabase.from('list_items').update({
+          quantity: existing.quantity + Math.ceil(ing.quantity),
+          note: `fra ukesmeny`,
+        }).eq('id', existing.id);
+      } else {
+        await supabase.from('list_items').insert({
+          list_id: selectedListId,
+          name: ing.name,
+          quantity: Math.max(1, Math.ceil(ing.quantity)),
+          note: ing.recipeNames.length === 1 ? `fra ${ing.recipeNames[0]}` : `fra ukesmeny`,
+        });
+      }
+    }
+
+    setImporting(false);
+    setImportDone(true);
+  };
+
+  const filledDays = slots.filter((s) => s.recipe_id || s.custom_name).length;
+
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={{ flex: 1, backgroundColor: C.bg }}>
+        {/* Header */}
+        <View style={{
+          backgroundColor: 'rgba(236,253,245,0.9)',
+          paddingTop: insets.top + 8,
+          ...(isWeb ? { backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'sticky', top: 0, zIndex: 40 } as any : {}),
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 14 } as any}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ padding: 8, borderRadius: 12, backgroundColor: 'rgba(0,105,71,0.1)' }}
+            >
+              <MaterialIcons name="arrow-back" size={22} color={C.primary} />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 20, fontWeight: '800', color: C.text, fontFamily: C.font } as any}>Ukesmeny</Text>
+              <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>{weekLabel(weekStart)}</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => { resetMealPlanImport(); setShowMealPlanImport(true); }}
+              style={{ padding: 8, borderRadius: 12, backgroundColor: 'rgba(0,105,71,0.1)' }}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="file-upload" size={22} color={C.primary} />
+            </TouchableOpacity>
+            {filledDays > 0 && (
+              <TouchableOpacity
+                onPress={prepareImport}
+                style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: C.primary }}
+                activeOpacity={0.8}
+              >
+                <Text style={{ fontSize: 14, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>
+                  Legg i liste
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}>
+
+          {/* Ukenavigasjon */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <TouchableOpacity
+              onPress={() => setWeekOffset((v) => v - 1)}
+              style={{ padding: 10, borderRadius: 10, backgroundColor: C.container }}
+            >
+              <MaterialIcons name="chevron-left" size={22} color={C.primary} />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 14, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>
+              {weekOffset === 0 ? 'Denne uken' : weekOffset === 1 ? 'Neste uke' : weekOffset === -1 ? 'Forrige uke' : weekLabel(weekStart)}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setWeekOffset((v) => v + 1)}
+              style={{ padding: 10, borderRadius: 10, backgroundColor: C.container }}
+            >
+              <MaterialIcons name="chevron-right" size={22} color={C.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Dagskort */}
+          {loading ? (
+            <ActivityIndicator color={C.primary} style={{ marginTop: 40 }} />
+          ) : (
+            <View style={{ gap: 10 }}>
+              {slots.map((slot, i) => {
+                const date = new Date(weekStart);
+                date.setDate(weekStart.getDate() + i);
+                const dateLabel = `${date.getDate()}. ${date.toLocaleDateString('nb-NO', { month: 'short' })}`;
+                const hasRecipe = !!slot.recipe;
+
+                return (
+                  <TouchableOpacity
+                    key={i}
+                    onPress={() => setPickingDay(i)}
+                    activeOpacity={0.75}
+                    style={[{
+                      backgroundColor: hasRecipe ? C.white : C.white,
+                      borderRadius: 18, padding: 16,
+                      flexDirection: 'row', alignItems: 'center', gap: 14,
+                      borderWidth: hasRecipe ? 0 : 1,
+                      borderColor: C.outline + '33',
+                      borderStyle: hasRecipe ? 'solid' : 'dashed',
+                    } as any, isWeb && hasRecipe ? ({ boxShadow: '0px 4px 16px rgba(0,54,42,0.06)' } as any) : {}]}
+                  >
+                    {/* Dag-badge */}
+                    <View style={{
+                      width: 48, height: 48, borderRadius: 14,
+                      backgroundColor: hasRecipe ? C.primaryContainer : C.low,
+                      alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>{DAYS[i]}</Text>
+                      <Text style={{ fontSize: 13, fontWeight: '800', color: C.text, fontFamily: C.font } as any}>{date.getDate()}</Text>
+                    </View>
+
+                    {/* Innhold */}
+                    <View style={{ flex: 1 }}>
+                      {hasRecipe ? (
+                        <>
+                          <Text style={{ fontSize: 16, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any} numberOfLines={1}>
+                            {slot.recipe!.name}
+                          </Text>
+                          <Text style={{ fontSize: 12, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
+                            {slot.servings} porsjoner
+                            {slot.recipe!.source_label ? ` · ${slot.recipe!.source_label}` : ''}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text style={{ fontSize: 15, color: C.outline, fontFamily: C.fontBody } as any}>
+                          Legg til middag...
+                        </Text>
+                      )}
+                    </View>
+
+                    {hasRecipe && (
+                      <TouchableOpacity
+                        onPress={(e) => { e.stopPropagation(); assignRecipe(i, null); }}
+                        hitSlop={8}
+                        style={{ padding: 6, borderRadius: 8, backgroundColor: C.error + '15' }}
+                      >
+                        <MaterialIcons name="close" size={16} color={C.error} />
+                      </TouchableOpacity>
+                    )}
+                    <MaterialIcons
+                      name={hasRecipe ? 'edit' : 'add-circle-outline'}
+                      size={20}
+                      color={C.outline}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          {/* Oppsummering */}
+          {filledDays > 0 && (
+            <View style={{ marginTop: 24, padding: 16, backgroundColor: C.container, borderRadius: 16 }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: C.textSec, fontFamily: C.fontBody } as any}>
+                {filledDays} av 7 dager planlagt · trykk «Legg i liste» for å importere ingredienser
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Ukesmeny-import modal */}
+        <Modal visible={showMealPlanImport} transparent animationType="slide">
+          <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,54,42,0.3)' }}>
+            <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => !mpParsing && !mpSaving && setShowMealPlanImport(false)} />
+            <View style={[{
+              backgroundColor: C.white, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+              maxHeight: '90%' as any,
+            }, isWeb ? ({ boxShadow: '0px -20px 60px rgba(0,54,42,0.15)' } as any) : {}]}>
+              <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
+                <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: C.outline + '66' }} />
+              </View>
+
+              {mpDone ? (
+                <View style={{ padding: 40, alignItems: 'center', gap: 16 } as any}>
+                  <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: C.primaryContainer, alignItems: 'center', justifyContent: 'center' }}>
+                    <MaterialIcons name="check" size={32} color={C.primary} />
+                  </View>
+                  <Text style={{ fontSize: 20, fontWeight: '800', color: C.text, fontFamily: C.font, textAlign: 'center' } as any}>
+                    Oppskrifter lagret!
+                  </Text>
+                  <Text style={{ fontSize: 14, color: C.textSec, fontFamily: C.fontBody, textAlign: 'center' } as any}>
+                    {mpParsedRecipes.filter((r) => r.selected).length} oppskrifter er lagret og klar til bruk i ukesmenyen
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => { setShowMealPlanImport(false); resetMealPlanImport(); refreshRecipes(); }}
+                    style={{ paddingHorizontal: 32, paddingVertical: 14, borderRadius: 14, backgroundColor: C.primary, marginTop: 8 }}
+                  >
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>Tilbake til ukesmeny</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  <View style={{ paddingHorizontal: 24, paddingVertical: 16 }}>
+                    <Text style={{ fontSize: 18, fontWeight: '800', color: C.text, fontFamily: C.font, marginBottom: 4 } as any}>
+                      Importer ukesmeny
+                    </Text>
+                    <Text style={{ fontSize: 13, color: C.textSec, fontFamily: C.fontBody } as any}>
+                      Last opp PDF eller bilde — analyseres automatisk
+                    </Text>
+                  </View>
+
+                  <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+                    {mpParsedRecipes.length === 0 ? (
+                      <>
+                        <TouchableOpacity
+                          onPress={mpParsing ? undefined : openMealPlanFilePicker}
+                          activeOpacity={mpParsing ? 1 : 0.8}
+                          style={[{
+                            borderRadius: 20, borderWidth: 2,
+                            borderColor: mpParsing ? C.primary : mpImageUri ? C.primary : C.outline + '66',
+                            borderStyle: mpImageUri ? 'solid' : 'dashed',
+                            overflow: 'hidden', minHeight: 160,
+                            alignItems: 'center', justifyContent: 'center',
+                            backgroundColor: mpParsing ? C.low : mpImageUri ? 'transparent' : C.low + '88',
+                            marginBottom: 16,
+                          } as any]}
+                        >
+                          {mpParsing ? (
+                            <View style={{ alignItems: 'center', gap: 14, padding: 28 } as any}>
+                              <ActivityIndicator size="large" color={C.primary} />
+                              <Text style={{ fontSize: 14, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>
+                                Leser ukesmenyen...
+                              </Text>
+                            </View>
+                          ) : mpImageUri ? (
+                            mpImageMediaType === 'application/pdf' ? (
+                              <View style={{ alignItems: 'center', gap: 10, padding: 28 } as any}>
+                                <MaterialIcons name="picture-as-pdf" size={48} color={C.primary} />
+                                <Text style={{ fontSize: 14, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>
+                                  PDF lastet opp
+                                </Text>
+                              </View>
+                            ) : (
+                              <Image source={{ uri: mpImageUri }} style={{ width: '100%', height: 200 } as any} resizeMode="cover" />
+                            )
+                          ) : (
+                            <View style={{ alignItems: 'center', gap: 10, padding: 24 } as any}>
+                              <MaterialIcons name="upload-file" size={40} color={C.outline} />
+                              <Text style={{ fontSize: 15, fontWeight: '600', color: C.textSec, fontFamily: C.fontBody, textAlign: 'center' } as any}>
+                                Trykk for å velge fil{'\n'}
+                                <Text style={{ fontSize: 13, fontWeight: '400' } as any}>
+                                  PDF eller bilde av ukesmenyen
+                                </Text>
+                              </Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+
+                        {mpError && (
+                          <View style={{ marginBottom: 12, backgroundColor: 'rgba(179,27,37,0.08)', borderRadius: 12, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 } as any}>
+                            <MaterialIcons name="error-outline" size={18} color={C.error} />
+                            <Text style={{ flex: 1, fontSize: 14, color: C.error, fontFamily: C.fontBody } as any}>{mpError}</Text>
+                            <TouchableOpacity onPress={() => { resetMealPlanImport(); }} activeOpacity={0.7}>
+                              <Text style={{ fontSize: 13, fontWeight: '700', color: C.error, fontFamily: C.fontBody } as any}>Prøv igjen</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {/* Oppskriftsliste — velg hvilke du vil lagre */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 } as any}>
+                          <Text style={{ fontSize: 13, fontWeight: '700', color: C.textSec, fontFamily: C.fontBody } as any}>
+                            {mpParsedRecipes.filter((r) => r.selected).length} av {mpParsedRecipes.length} valgt
+                          </Text>
+                          <TouchableOpacity onPress={() => setMpParsedRecipes((p) => p.map((r) => ({ ...r, selected: true })))} activeOpacity={0.7}>
+                            <Text style={{ fontSize: 13, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>Velg alle</Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        <View style={{ gap: 10, marginBottom: 20 }}>
+                          {mpParsedRecipes.map((recipe, idx) => (
+                            <TouchableOpacity
+                              key={idx}
+                              onPress={() => setMpParsedRecipes((prev) => prev.map((r, i) => i === idx ? { ...r, selected: !r.selected } : r))}
+                              activeOpacity={0.75}
+                              style={{
+                                padding: 16, borderRadius: 16,
+                                backgroundColor: recipe.selected ? C.low : C.white,
+                                borderWidth: 1.5,
+                                borderColor: recipe.selected ? C.primary + '55' : C.outline + '33',
+                                flexDirection: 'row', alignItems: 'flex-start', gap: 12,
+                              } as any}
+                            >
+                              <View style={{
+                                width: 24, height: 24, borderRadius: 999, marginTop: 1,
+                                borderWidth: 2, borderColor: recipe.selected ? C.primary : C.outline,
+                                backgroundColor: recipe.selected ? C.primary : 'transparent',
+                                alignItems: 'center', justifyContent: 'center',
+                              }}>
+                                {recipe.selected && <MaterialIcons name="check" size={14} color={C.white} />}
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>
+                                  {recipe.title}
+                                </Text>
+                                {recipe.description && (
+                                  <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody, marginTop: 2 } as any} numberOfLines={2}>
+                                    {recipe.description}
+                                  </Text>
+                                )}
+                                <Text style={{ fontSize: 11, color: C.outline, marginTop: 4, fontFamily: C.fontBody } as any}>
+                                  {recipe.servings ?? 4} porsjoner
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+
+                        <TouchableOpacity
+                          onPress={() => resetMealPlanImport()}
+                          style={{ paddingVertical: 12, alignItems: 'center', marginBottom: 8 }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={{ fontSize: 14, color: C.textSec, fontFamily: C.fontBody } as any}>Last opp ny fil</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={handleMealPlanSave}
+                          disabled={mpSaving || mpParsedRecipes.filter((r) => r.selected).length === 0}
+                          activeOpacity={0.8}
+                          style={{
+                            paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
+                            flexDirection: 'row', gap: 8,
+                            backgroundColor: mpSaving || mpParsedRecipes.filter((r) => r.selected).length === 0 ? C.outline + '66' : C.primary,
+                          } as any}
+                        >
+                          {mpSaving
+                            ? <><ActivityIndicator size="small" color={C.white} /><Text style={{ fontSize: 16, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>Lagrer...</Text></>
+                            : <Text style={{ fontSize: 16, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>
+                                Lagre {mpParsedRecipes.filter((r) => r.selected).length} oppskrifter
+                              </Text>
+                          }
+                        </TouchableOpacity>
+                      </>
+                    )}
+                  </ScrollView>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
+
+        {/* Velg oppskrift modal */}
+        <Modal visible={pickingDay !== null} transparent animationType="slide">
+          <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,54,42,0.3)' }}>
+            <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setPickingDay(null)} />
+            <View style={[{
+              backgroundColor: C.white, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+              maxHeight: '80%' as any,
+            }, isWeb ? ({ boxShadow: '0px -20px 60px rgba(0,54,42,0.15)' } as any) : {}]}>
+              <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
+                <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: C.outline + '66' }} />
+              </View>
+              <View style={{ paddingHorizontal: 24, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: C.text, fontFamily: C.font } as any}>
+                  {pickingDay !== null ? DAYS_FULL[pickingDay] : ''}
+                </Text>
+                {pickingDay !== null && slots[pickingDay]?.recipe_id && (
+                  <TouchableOpacity
+                    onPress={() => assignRecipe(pickingDay!, null)}
+                    style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: 'rgba(179,27,37,0.08)' }}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: C.error, fontFamily: C.fontBody } as any}>Fjern</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+                {recipes.length === 0 ? (
+                  <View style={{ alignItems: 'center', padding: 40, gap: 12 } as any}>
+                    <MaterialIcons name="restaurant-menu" size={40} color={C.outline} />
+                    <Text style={{ fontSize: 15, color: C.textSec, textAlign: 'center', fontFamily: C.fontBody } as any}>
+                      Ingen oppskrifter lagret ennå.{'\n'}Importer en oppskrift først.
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => { setPickingDay(null); router.push('/(app)/lists/recipe'); }}
+                      style={{ paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, backgroundColor: C.primary, marginTop: 8 }}
+                    >
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>Importer oppskrift</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={{ gap: 8 }}>
+                    {recipes.map((recipe) => {
+                      const isSelected = pickingDay !== null && slots[pickingDay]?.recipe_id === recipe.id;
+                      return (
+                        <TouchableOpacity
+                          key={recipe.id}
+                          onPress={() => pickingDay !== null && assignRecipe(pickingDay, recipe)}
+                          activeOpacity={0.75}
+                          style={{
+                            padding: 16, borderRadius: 16,
+                            backgroundColor: isSelected ? C.primaryContainer : C.low,
+                            flexDirection: 'row', alignItems: 'center', gap: 12,
+                          } as any}
+                        >
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>
+                              {recipe.name}
+                            </Text>
+                            {recipe.source_label && (
+                              <Text style={{ fontSize: 12, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
+                                {recipe.source_label}
+                              </Text>
+                            )}
+                          </View>
+                          <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>
+                            {recipe.base_servings} porsj.
+                          </Text>
+                          {isSelected && <MaterialIcons name="check-circle" size={20} color={C.primary} />}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Import-modal */}
+        <Modal visible={showImport} transparent animationType="slide">
+          <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,54,42,0.3)' }}>
+            <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => !importing && setShowImport(false)} />
+            <View style={[{
+              backgroundColor: C.white, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+              maxHeight: '90%' as any,
+            }, isWeb ? ({ boxShadow: '0px -20px 60px rgba(0,54,42,0.15)' } as any) : {}]}>
+              <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
+                <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: C.outline + '66' }} />
+              </View>
+
+              {generatingIngredients ? (
+                <View style={{ padding: 40, alignItems: 'center', gap: 16 } as any}>
+                  <ActivityIndicator size="large" color={C.primary} />
+                  <Text style={{ fontSize: 18, fontWeight: '800', color: C.text, fontFamily: C.font, textAlign: 'center' } as any}>
+                    Henter ingredienser...
+                  </Text>
+                  <Text style={{ fontSize: 14, color: C.textSec, fontFamily: C.fontBody, textAlign: 'center' } as any}>
+                    Claude genererer ingredienslister for oppskriftene
+                  </Text>
+                </View>
+              ) : importDone ? (
+                <View style={{ padding: 40, alignItems: 'center', gap: 16 } as any}>
+                  <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: C.primaryContainer, alignItems: 'center', justifyContent: 'center' }}>
+                    <MaterialIcons name="check" size={32} color={C.primary} />
+                  </View>
+                  <Text style={{ fontSize: 20, fontWeight: '800', color: C.text, fontFamily: C.font, textAlign: 'center' } as any}>
+                    Lagt til i listen!
+                  </Text>
+                  <Text style={{ fontSize: 14, color: C.textSec, fontFamily: C.fontBody, textAlign: 'center' } as any}>
+                    {importIngredients.filter((i) => !i.skip).length} ingredienser lagt til
+                    {importIngredients.filter((i) => i.skip).length > 0
+                      ? `, ${importIngredients.filter((i) => i.skip).length} hoppet over`
+                      : ''}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => { setShowImport(false); if (selectedListId) router.push(`/(app)/lists/${selectedListId}`); }}
+                    style={{ paddingHorizontal: 32, paddingVertical: 14, borderRadius: 14, backgroundColor: C.primary, marginTop: 8 }}
+                  >
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>Åpne liste</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  <View style={{ paddingHorizontal: 24, paddingVertical: 16 }}>
+                    <Text style={{ fontSize: 18, fontWeight: '800', color: C.text, fontFamily: C.font, marginBottom: 4 } as any}>
+                      Legg ingredienser i liste
+                    </Text>
+                    <Text style={{ fontSize: 13, color: C.textSec, fontFamily: C.fontBody } as any}>
+                      Huk av det du allerede har hjemme
+                    </Text>
+                  </View>
+
+                  {/* Listevalg */}
+                  {shoppingLists.length > 1 && (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        {shoppingLists.map((l) => (
+                          <TouchableOpacity
+                            key={l.id}
+                            onPress={() => setSelectedListId(l.id)}
+                            style={{
+                              paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
+                              backgroundColor: selectedListId === l.id ? C.primary : C.container,
+                            }}
+                          >
+                            <Text style={{ fontSize: 13, fontWeight: '600', color: selectedListId === l.id ? C.white : C.text, fontFamily: C.fontBody } as any}>
+                              {l.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  )}
+
+                  <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+                    {/* Ingredienser som legges til */}
+                    {importIngredients.some((i) => !i.alreadyOnList && !i.is_staple) && (
+                      <View style={{ marginBottom: 16 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 8 } as any}>
+                          Legges til
+                        </Text>
+                        {importIngredients.filter((i) => !i.alreadyOnList && !i.is_staple).map((ing, idx) => (
+                          <IngredientRow key={`add-${idx}`} ing={ing} onToggle={() => setImportIngredients((prev) =>
+                            prev.map((p) => normalizeName(p.name) === normalizeName(ing.name) ? { ...p, skip: !p.skip } : p)
+                          )} />
+                        ))}
+                      </View>
+                    )}
+
+                    {/* Basisvarer — opt-out (skip som standard) */}
+                    {importIngredients.some((i) => i.is_staple && !i.alreadyOnList) && (
+                      <View style={{ marginBottom: 16 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 8 } as any}>
+                          Basisvarer (har du trolig hjemme)
+                        </Text>
+                        {importIngredients.filter((i) => i.is_staple && !i.alreadyOnList).map((ing, idx) => (
+                          <IngredientRow key={`staple-${idx}`} ing={ing} onToggle={() => setImportIngredients((prev) =>
+                            prev.map((p) => normalizeName(p.name) === normalizeName(ing.name) ? { ...p, skip: !p.skip } : p)
+                          )} />
+                        ))}
+                      </View>
+                    )}
+
+                    {/* Allerede på listen */}
+                    {importIngredients.some((i) => i.alreadyOnList) && (
+                      <View style={{ marginBottom: 16 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 8 } as any}>
+                          Allerede på listen
+                        </Text>
+                        {importIngredients.filter((i) => i.alreadyOnList).map((ing, idx) => (
+                          <IngredientRow key={`exists-${idx}`} ing={ing} onToggle={() => setImportIngredients((prev) =>
+                            prev.map((p) => normalizeName(p.name) === normalizeName(ing.name) ? { ...p, skip: !p.skip } : p)
+                          )} />
+                        ))}
+                      </View>
+                    )}
+                  </ScrollView>
+
+                  <View style={{ padding: 16, gap: 10 }}>
+                    <TouchableOpacity
+                      onPress={doImport}
+                      disabled={importing || importIngredients.filter((i) => !i.skip).length === 0}
+                      style={{
+                        paddingVertical: 16, alignItems: 'center', borderRadius: 14,
+                        backgroundColor: importing || importIngredients.filter((i) => !i.skip).length === 0 ? C.outline : C.primary,
+                        flexDirection: 'row', justifyContent: 'center', gap: 8,
+                      } as any}
+                    >
+                      {importing && <ActivityIndicator size="small" color={C.white} />}
+                      <Text style={{ fontSize: 16, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>
+                        {importing ? 'Legger til...' : `Legg til ${importIngredients.filter((i) => !i.skip).length} ingredienser`}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setShowImport(false)}
+                      style={{ paddingVertical: 14, alignItems: 'center' }}
+                    >
+                      <Text style={{ fontSize: 15, fontWeight: '600', color: C.textSec, fontFamily: C.fontBody } as any}>Avbryt</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
+      </View>
+    </>
+  );
+}

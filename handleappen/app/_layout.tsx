@@ -13,30 +13,31 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { Colors } from '@/constants/theme';
 import '@/i18n';
 
-// Custom themes matching Stitch design
-const StitchDark = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    primary: Colors.dark.tint,
-    background: Colors.dark.background,
-    card: Colors.dark.card,
-    text: Colors.dark.text,
-    border: 'rgba(47, 101, 85, 0.2)',
-    notification: Colors.dark.tint,
-  },
-};
-
+// Stitch LIGHT theme (primary)
 const StitchLight = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: Colors.light.tint,
-    background: Colors.light.background,
-    card: Colors.light.card,
-    text: Colors.light.text,
-    border: 'rgba(79, 129, 112, 0.15)',
-    notification: Colors.light.tint,
+    primary: '#006947',
+    background: '#d8fff0',
+    card: '#ffffff',
+    text: '#00362a',
+    border: 'rgba(129, 184, 165, 0.15)',
+    notification: '#006947',
+  },
+};
+
+// Stitch dark theme (secondary)
+const StitchDark = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    primary: '#00eea6',
+    background: '#001510',
+    card: '#001d16',
+    text: '#d8fff0',
+    border: 'rgba(47, 101, 85, 0.2)',
+    notification: '#00eea6',
   },
 };
 
@@ -86,8 +87,8 @@ export default function RootLayout() {
 
   if (!ready) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.dark.background }}>
-        <ActivityIndicator size="large" color={Colors.dark.tint} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#d8fff0' }}>
+        <ActivityIndicator size="large" color="#006947" />
       </View>
     );
   }

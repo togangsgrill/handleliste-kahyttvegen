@@ -1,241 +1,438 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  ScrollView,
-  useWindowDimensions,
-} from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { Text, TextInput, TouchableOpacity, View, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { supabase } from '@/lib/supabase';
-import { Spacing, Radius, contentMaxWidth } from '@/constants/theme';
+
+const C = {
+  bg: '#d8fff0',
+  white: '#ffffff',
+  low: '#bffee7',
+  container: '#b2f6de',
+  primary: '#006947',
+  primaryContainer: '#00feb2',
+  text: '#00362a',
+  textSec: '#2f6555',
+  outline: '#81b8a5',
+  font: Platform.OS === 'web' ? "'Plus Jakarta Sans', system-ui, sans-serif" : undefined,
+  fontBody: Platform.OS === 'web' ? "'Manrope', system-ui, sans-serif" : undefined,
+};
+
+const isWeb = Platform.OS === 'web';
+
+interface Trip {
+  dato: string;          // ISO date string
+  butikk: string;
+  antall_varer: number;
+  total: number;
+  store_location_id: string;
+}
+
+interface TripItem {
+  item_name: string;
+  unit_price: number;
+}
 
 interface SearchResult {
   item_name: string;
-  action: string;
-  created_at: string;
+  unit_price: number;
+  observed_at: string;
+  store_name: string;
+}
+
+interface PendingVisit {
+  id: string;
+  detected_at: string;
+  store_locations: { name: string; chain: string } | null;
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('nb-NO', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+function daysSince(iso: string) {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+}
+
+// ---- Handletur-bottomsheet ----
+function TripSheet({ trip, onClose }: { trip: Trip | null; onClose: () => void }) {
+  const [items, setItems] = useState<TripItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!trip) return;
+    setLoading(true);
+    const dayStart = trip.dato + 'T00:00:00.000Z';
+    const dayEnd = trip.dato + 'T23:59:59.999Z';
+    supabase
+      .from('price_history')
+      .select('item_name, unit_price')
+      .eq('store_location_id', trip.store_location_id)
+      .gte('observed_at', dayStart)
+      .lte('observed_at', dayEnd)
+      .order('unit_price', { ascending: false })
+      .then(({ data }) => {
+        setItems(data ?? []);
+        setLoading(false);
+      });
+  }, [trip?.dato, trip?.store_location_id]);
+
+  if (!trip) return null;
+
+  return (
+    <Modal visible={!!trip} transparent animationType="slide">
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,54,42,0.3)' }}>
+        <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
+        <View style={[{
+          backgroundColor: C.white,
+          borderTopLeftRadius: 28, borderTopRightRadius: 28,
+          maxHeight: '85%' as any,
+        }, isWeb ? ({ boxShadow: '0px -20px 60px rgba(0,54,42,0.15)' } as any) : {}]}>
+          <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
+            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: C.outline + '66' }} />
+          </View>
+          <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>
+            {/* Header */}
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginBottom: 20 } as any}>
+              <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: C.low, alignItems: 'center', justifyContent: 'center' }}>
+                <MaterialIcons name="shopping-basket" size={22} color={C.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: C.text, fontFamily: C.font } as any}>{trip.butikk}</Text>
+                <Text style={{ fontSize: 13, color: C.textSec, fontFamily: C.fontBody, marginTop: 2 } as any}>{formatDate(trip.dato)}</Text>
+              </View>
+              <TouchableOpacity onPress={onClose}>
+                <MaterialIcons name="close" size={22} color={C.textSec} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Nøkkeltall */}
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 24 } as any}>
+              <View style={{ flex: 1, backgroundColor: C.low, borderRadius: 16, padding: 14 }}>
+                <MaterialIcons name="receipt" size={16} color={C.primary} />
+                <Text style={{ fontSize: 24, fontWeight: '800', color: C.text, marginTop: 8, fontFamily: C.font } as any}>
+                  {trip.total.toFixed(0)} kr
+                </Text>
+                <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>totalt</Text>
+              </View>
+              <View style={{ flex: 1, backgroundColor: C.low, borderRadius: 16, padding: 14 }}>
+                <MaterialIcons name="shopping-cart" size={16} color={C.primary} />
+                <Text style={{ fontSize: 24, fontWeight: '800', color: C.text, marginTop: 8, fontFamily: C.font } as any}>
+                  {trip.antall_varer}
+                </Text>
+                <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>varer</Text>
+              </View>
+              <View style={{ flex: 1, backgroundColor: C.low, borderRadius: 16, padding: 14 }}>
+                <MaterialIcons name="sell" size={16} color={C.primary} />
+                <Text style={{ fontSize: 24, fontWeight: '800', color: C.text, marginTop: 8, fontFamily: C.font } as any}>
+                  {(trip.total / trip.antall_varer).toFixed(0)} kr
+                </Text>
+                <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>snitt/vare</Text>
+              </View>
+            </View>
+
+            {/* Vareliste */}
+            <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 10 } as any}>
+              Kjøpte varer
+            </Text>
+            {loading ? (
+              <ActivityIndicator color={C.primary} />
+            ) : (
+              <View style={{ backgroundColor: C.container, borderRadius: 16, overflow: 'hidden' }}>
+                {items.map((item, i) => (
+                  <View key={i} style={[
+                    { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, paddingHorizontal: 16 } as any,
+                    i < items.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(0,54,42,0.07)' } : {},
+                  ]}>
+                    <Text style={{ flex: 1, fontSize: 14, fontWeight: '500', color: C.text, fontFamily: C.fontBody, textTransform: 'capitalize' } as any}>
+                      {item.item_name}
+                    </Text>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>
+                      {item.unit_price.toFixed(0)} kr
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
 }
 
 export default function HistoryScreen() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const householdId = useAuthStore((s) => s.householdId);
+  const userId = useAuthStore((s) => s.userId);
+
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searched, setSearched] = useState(false);
-  const [topItems, setTopItems] = useState<{ name: string; count: number }[]>([]);
-
-  const c = {
-    text: useThemeColor({}, 'text'),
-    textSecondary: useThemeColor({}, 'textSecondary'),
-    textTertiary: useThemeColor({}, 'textTertiary'),
-    tint: useThemeColor({}, 'tint'),
-    card: useThemeColor({}, 'card'),
-    bgGrouped: useThemeColor({}, 'backgroundGrouped'),
-    outlineVariant: useThemeColor({}, 'outlineVariant'),
-    surfaceContainer: useThemeColor({}, 'surfaceContainer'),
-    surfaceHigh: useThemeColor({}, 'surfaceContainerHigh'),
-    surfaceLowest: useThemeColor({}, 'backgroundElevated'),
-    onPrimary: useThemeColor({}, 'onPrimary'),
-    primaryContainer: useThemeColor({}, 'primaryContainer'),
-    separator: useThemeColor({}, 'separator'),
-    success: useThemeColor({}, 'success'),
-    tertiary: useThemeColor({}, 'tertiary'),
-  };
-
-  const isWide = width >= 600;
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loadingTrips, setLoadingTrips] = useState(true);
+  const [showAllTrips, setShowAllTrips] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
+  const [pendingVisit, setPendingVisit] = useState<PendingVisit | null>(null);
 
   useEffect(() => {
-    // Load top items
+    if (!userId) return;
     supabase
-      .from('list_activity')
-      .select('item_name')
-      .eq('action', 'checked')
-      .order('created_at', { ascending: false })
-      .limit(200)
-      .then(({ data }) => {
-        if (!data) return;
-        const freq = new Map<string, number>();
-        for (const d of data) freq.set(d.item_name, (freq.get(d.item_name) ?? 0) + 1);
-        setTopItems([...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) => ({ name, count })));
-      });
-  }, []);
+      .from('detected_visits')
+      .select('id, detected_at, store_locations(name, chain)')
+      .eq('user_id', userId)
+      .eq('status', 'pending')
+      .order('detected_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => { if (data) setPendingVisit(data as unknown as PendingVisit); });
+  }, [userId]);
 
-  const handleSearch = useCallback(async () => {
-    if (!query.trim()) return;
-    setSearched(true);
-    const { data } = await supabase
-      .from('list_activity')
-      .select('item_name, action, created_at')
-      .ilike('item_name', `%${query.trim()}%`)
-      .order('created_at', { ascending: false })
-      .limit(50);
-    setResults(data ?? []);
+  useEffect(() => {
+    if (!householdId) return;
+    setLoadingTrips(true);
+    supabase
+      .from('price_history')
+      .select('observed_at, unit_price, store_location_id, store_locations(name)')
+      .order('observed_at', { ascending: false })
+      .limit(2000)
+      .then(({ data }) => {
+        if (!data) { setLoadingTrips(false); return; }
+
+        // Grupper per dato + butikk
+        const map = new Map<string, Trip>();
+        for (const row of data as any[]) {
+          const dato = row.observed_at.slice(0, 10);
+          const key = `${dato}__${row.store_location_id}`;
+          if (!map.has(key)) {
+            map.set(key, {
+              dato,
+              butikk: row.store_locations?.name ?? 'Ukjent',
+              antall_varer: 0,
+              total: 0,
+              store_location_id: row.store_location_id,
+            });
+          }
+          const t = map.get(key)!;
+          t.antall_varer += 1;
+          t.total += Number(row.unit_price);
+        }
+        const sorted = [...map.values()].sort((a, b) => b.dato.localeCompare(a.dato));
+        setTrips(sorted);
+        setLoadingTrips(false);
+      });
+  }, [householdId]);
+
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (!query.trim()) { setSearched(false); setSearchResults([]); return; }
+    searchTimerRef.current = setTimeout(async () => {
+      setSearched(true);
+      const { data } = await supabase
+        .from('price_history')
+        .select('item_name, unit_price, observed_at, store_locations(name)')
+        .ilike('item_name', `%${query.trim()}%`)
+        .order('observed_at', { ascending: false })
+        .limit(30);
+      setSearchResults((data ?? []).map((r: any) => ({
+        item_name: r.item_name,
+        unit_price: r.unit_price,
+        observed_at: r.observed_at,
+        store_name: r.store_locations?.name ?? 'Ukjent',
+      })));
+    }, 300);
+    return () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); };
   }, [query]);
 
-  const actionLabel: Record<string, string> = {
-    added: 'Lagt til', checked: 'Handlet', unchecked: 'Fjernet avhuking', removed: 'Slettet', edited: 'Redigert',
+  const handleVisitResponse = async (confirmed: boolean) => {
+    if (!pendingVisit) return;
+    await supabase.from('detected_visits').update({
+      status: confirmed ? 'confirmed' : 'dismissed',
+      ...(confirmed ? { confirmed_at: new Date().toISOString() } : {}),
+    }).eq('id', pendingVisit.id);
+    setPendingVisit(null);
   };
 
+  const visibleTrips = showAllTrips ? trips : trips.slice(0, 8);
+
   return (
-    <ThemedView style={[styles.container, { backgroundColor: c.bgGrouped }]}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: insets.top + Spacing.sm },
-          isWide && { maxWidth: contentMaxWidth, alignSelf: 'center' as const, width: '100%' },
-        ]}
-      >
-        <Text style={[styles.largeTitle, { color: c.text }]}>📋 Historikk & Innsikt</Text>
+    <View style={{ flex: 1, backgroundColor: C.bg }}>
+      {/* Header */}
+      <View style={{
+        backgroundColor: 'rgba(236,253,245,0.8)',
+        paddingTop: insets.top + 8,
+        zIndex: 40,
+        ...(isWeb ? { backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'sticky', top: 0 } as any : {}),
+      }}>
+        <View style={{ paddingHorizontal: 24, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 10 } as any}>
+          <MaterialIcons name="spa" size={22} color={C.primary} />
+          <Text style={{ fontSize: 20, fontWeight: '700', color: C.text, fontStyle: 'italic', letterSpacing: -0.5, fontFamily: C.font } as any}>Handleliste</Text>
+        </View>
+      </View>
 
-        {/* Strava-style detection banner */}
-        <TouchableOpacity
-          style={[styles.stravaBanner, { backgroundColor: c.primaryContainer, borderColor: c.outlineVariant }]}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.stravaText, { color: c.text }]}>
-            Handlet du på <Text style={[styles.stravaAccent, { color: c.tint }]}>Kiwi Torshov</Text> kl. 14:23?
-          </Text>
-          <View style={styles.stravaButtons}>
-            <TouchableOpacity style={[styles.stravaBtn, { backgroundColor: c.tint }]} activeOpacity={0.7}>
-              <Text style={[styles.stravaBtnText, { color: c.onPrimary }]}>Ja, bekreft</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.stravaBtnOutline, { borderColor: c.outlineVariant }]} activeOpacity={0.7}>
-              <Text style={[styles.stravaBtnOutlineText, { color: c.textSecondary }]}>Nei</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 120, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}>
 
-        {/* Search */}
-        <View style={[styles.searchCard, { backgroundColor: c.surfaceHigh, borderColor: c.outlineVariant }]}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            style={[styles.searchInput, { color: c.text }]}
-            placeholder="Når kjøpte vi sist parmesan?"
-            placeholderTextColor={c.textTertiary}
-            value={query}
-            onChangeText={setQuery}
-            onSubmitEditing={handleSearch}
-            returnKeyType="search"
-          />
+        <View style={{ marginBottom: 24 }}>
+          <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: C.textSec, marginBottom: 8, textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Oversikt</Text>
+          <Text style={{ fontSize: 32, fontWeight: '800', color: C.text, letterSpacing: -1, fontFamily: C.font } as any}>Handlehistorikk</Text>
         </View>
 
-        {/* Search results */}
-        {searched && results.length > 0 && (
-          <View style={[styles.card, { backgroundColor: c.surfaceLowest, borderColor: c.outlineVariant }]}>
-            {results.slice(0, 10).map((item, index) => (
-              <View
-                key={`${item.created_at}-${index}`}
-                style={[
-                  styles.resultRow,
-                  index < Math.min(results.length, 10) - 1 && { borderBottomColor: c.separator, borderBottomWidth: StyleSheet.hairlineWidth },
-                ]}
+        {/* Pending visit */}
+        {pendingVisit && (
+          <View style={[{
+            backgroundColor: C.primary, borderRadius: 24, padding: 24, marginBottom: 24, gap: 16,
+          }, isWeb ? { boxShadow: '0px 20px 40px rgba(0,105,71,0.25)' } as any : {}]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 } as any}>
+              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' }}>
+                <MaterialIcons name="store" size={22} color="#ffffff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 2, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Handlet du nylig?</Text>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: '#ffffff', fontFamily: C.font, marginTop: 2 } as any}>
+                  {pendingVisit.store_locations?.name ?? 'Ukjent butikk'}{' '}
+                  kl. {new Date(pendingVisit.detected_at).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 12 } as any}>
+              <TouchableOpacity
+                style={{ flex: 1, paddingVertical: 14, alignItems: 'center', borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
+                onPress={() => handleVisitResponse(false)} activeOpacity={0.8}
               >
-                <View style={styles.resultContent}>
-                  <Text style={[styles.resultName, { color: c.text }]}>{item.item_name}</Text>
-                  <Text style={[styles.resultAction, { color: c.textTertiary }]}>{actionLabel[item.action] ?? item.action}</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#ffffff', fontFamily: C.fontBody } as any}>Nei</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 2, paddingVertical: 14, alignItems: 'center', borderRadius: 14, backgroundColor: '#ffffff' }}
+                onPress={() => handleVisitResponse(true)} activeOpacity={0.8}
+              >
+                <Text style={{ fontSize: 15, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>Ja, bekreft</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Søk */}
+        <View style={{ marginBottom: 24 }}>
+          <View style={{
+            flexDirection: 'row', alignItems: 'center', gap: 10,
+            backgroundColor: 'rgba(157,236,210,0.5)', borderWidth: 1, borderColor: C.outline + '4D',
+            borderRadius: 9999, paddingHorizontal: 20, height: 52,
+          } as any}>
+            <MaterialIcons name="search" size={20} color={C.textSec} />
+            <TextInput
+              style={{ flex: 1, fontSize: 16, color: C.text, fontWeight: '500', fontFamily: C.fontBody } as any}
+              placeholder="Søk etter vare..."
+              placeholderTextColor={C.outline}
+              value={query}
+              onChangeText={setQuery}
+              returnKeyType="search"
+            />
+            {query.length > 0 && (
+              <TouchableOpacity onPress={() => setQuery('')}>
+                <MaterialIcons name="close" size={18} color={C.textSec} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Søkeresultater */}
+        {searched && (
+          <View style={[{
+            backgroundColor: C.white, borderRadius: 20, overflow: 'hidden',
+            borderWidth: 1, borderColor: C.outline + '33', marginBottom: 24,
+          }, isWeb ? { boxShadow: '0px 8px 24px rgba(0,54,42,0.06)' } as any : {}]}>
+            <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.outline + '22' }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: C.textSec, textTransform: 'uppercase', letterSpacing: 1.5, fontFamily: C.fontBody } as any}>
+                {searchResults.length} treff for «{query}»
+              </Text>
+            </View>
+            {searchResults.length === 0 ? (
+              <View style={{ padding: 20 }}>
+                <Text style={{ color: C.textSec, fontFamily: C.fontBody } as any}>Ingen treff — prøv et annet søkeord</Text>
+              </View>
+            ) : searchResults.map((r, i) => (
+              <View key={i} style={[
+                { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, gap: 12 } as any,
+                i < searchResults.length - 1 ? { borderBottomWidth: 1, borderBottomColor: C.outline + '22' } : {},
+              ]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: C.text, fontFamily: C.fontBody, textTransform: 'capitalize' } as any}>{r.item_name}</Text>
+                  <Text style={{ fontSize: 12, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
+                    {r.store_name} · {daysSince(r.observed_at) === 0 ? 'i dag' : `${daysSince(r.observed_at)}d siden`}
+                  </Text>
                 </View>
-                <Text style={[styles.resultDate, { color: c.textTertiary }]}>
-                  {new Date(item.created_at).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', year: 'numeric' })}
+                <Text style={{ fontSize: 15, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>
+                  {r.unit_price.toFixed(0)} kr
                 </Text>
               </View>
             ))}
           </View>
         )}
 
-        {searched && results.length === 0 && (
-          <View style={styles.emptyResult}>
-            <Text style={[styles.emptyText, { color: c.textSecondary }]}>Ingen treff for "{query}"</Text>
-          </View>
-        )}
-
-        {/* Top items */}
-        {topItems.length > 0 && (
+        {/* Handleturer */}
+        {!searched && (
           <>
-            <Text style={[styles.sectionLabel, { color: c.textSecondary }]}>🏆 TOPP VARER</Text>
-            <View style={[styles.card, { backgroundColor: c.surfaceLowest, borderColor: c.outlineVariant }]}>
-              {topItems.map((item, index) => (
-                <View
-                  key={item.name}
-                  style={[
-                    styles.topRow,
-                    index < topItems.length - 1 && { borderBottomColor: c.separator, borderBottomWidth: StyleSheet.hairlineWidth },
-                  ]}
-                >
-                  <View style={[styles.rankBadge, { backgroundColor: index === 0 ? c.tint : c.surfaceContainer }]}>
-                    <Text style={[styles.rankText, { color: index === 0 ? c.onPrimary : c.textSecondary }]}>#{index + 1}</Text>
-                  </View>
-                  <Text style={[styles.topName, { color: c.text }]}>{item.name}</Text>
-                  <Text style={[styles.topCount, { color: c.tint }]}>{item.count}×</Text>
-                </View>
-              ))}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4, marginBottom: 14 }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Handleturer</Text>
+              {trips.length > 8 && (
+                <TouchableOpacity onPress={() => setShowAllTrips((v) => !v)}>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: C.primary, fontFamily: C.fontBody } as any}>
+                    {showAllTrips ? 'Vis færre' : `Se alle ${trips.length}`}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
+
+            {loadingTrips ? (
+              <ActivityIndicator color={C.primary} style={{ marginTop: 40 }} />
+            ) : trips.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingTop: 60, gap: 12 } as any}>
+                <MaterialIcons name="shopping-cart" size={56} color="rgba(0,105,71,0.15)" />
+                <Text style={{ fontSize: 18, fontWeight: '600', color: C.text, fontFamily: C.font } as any}>Ingen handleturer ennå</Text>
+                <Text style={{ fontSize: 15, color: C.textSec, textAlign: 'center', fontFamily: C.fontBody } as any}>Scan en kvittering for å komme i gang</Text>
+              </View>
+            ) : (
+              <View style={{ gap: 10 }}>
+                {visibleTrips.map((trip, i) => {
+                  const ago = daysSince(trip.dato);
+                  const agoLabel = ago === 0 ? 'i dag' : ago === 1 ? 'i går' : `${ago}d siden`;
+                  return (
+                    <TouchableOpacity
+                      key={`${trip.dato}-${trip.store_location_id}`}
+                      onPress={() => setSelectedTrip(trip)}
+                      activeOpacity={0.75}
+                      style={[{
+                        backgroundColor: C.white, borderRadius: 18, padding: 16,
+                        flexDirection: 'row', alignItems: 'center', gap: 14,
+                      }, isWeb ? { boxShadow: '0px 4px 12px rgba(0,54,42,0.04)' } as any : {}]}
+                    >
+                      <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: C.low, alignItems: 'center', justifyContent: 'center' }}>
+                        <MaterialIcons name="shopping-basket" size={20} color={C.primary} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>{trip.butikk}</Text>
+                        <Text style={{ fontSize: 12, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
+                          {formatDate(trip.dato)} · {trip.antall_varer} varer
+                        </Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end', gap: 3 }}>
+                        <Text style={{ fontSize: 16, fontWeight: '800', color: C.primary, fontFamily: C.font } as any}>
+                          {trip.total.toFixed(0)} kr
+                        </Text>
+                        <Text style={{ fontSize: 11, color: C.outline, fontFamily: C.fontBody } as any}>{agoLabel}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
           </>
         )}
-
-        {!searched && topItems.length === 0 && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📊</Text>
-            <Text style={[styles.emptyText, { color: c.textSecondary }]}>
-              Begynn å handle for å se historikk her
-            </Text>
-          </View>
-        )}
       </ScrollView>
-    </ThemedView>
+
+      <TripSheet trip={selectedTrip} onClose={() => setSelectedTrip(null)} />
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: { paddingHorizontal: Spacing.md, paddingBottom: Spacing.xxl },
-  largeTitle: { fontSize: 28, fontWeight: '800', marginBottom: Spacing.lg },
-
-  // Strava banner
-  stravaBanner: { padding: Spacing.lg, borderRadius: Radius.xl, marginBottom: Spacing.lg, borderWidth: 1 },
-  stravaText: { fontSize: 18, fontWeight: '600', lineHeight: 26, marginBottom: Spacing.md },
-  stravaAccent: { fontWeight: '800' },
-  stravaButtons: { flexDirection: 'row', gap: Spacing.sm },
-  stravaBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: Radius.full },
-  stravaBtnText: { fontSize: 14, fontWeight: '700' },
-  stravaBtnOutline: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: Radius.full, borderWidth: 1 },
-  stravaBtnOutlineText: { fontSize: 14, fontWeight: '600' },
-
-  // Search
-  searchCard: {
-    flexDirection: 'row', alignItems: 'center',
-    borderRadius: Radius.full, paddingHorizontal: Spacing.md, borderWidth: 1, minHeight: 52, marginBottom: Spacing.lg,
-  },
-  searchIcon: { fontSize: 16, marginRight: Spacing.sm },
-  searchInput: { flex: 1, fontSize: 17, paddingVertical: 12 },
-
-  sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 2, marginBottom: Spacing.sm, marginTop: Spacing.md, paddingHorizontal: Spacing.xs },
-
-  card: { borderRadius: Radius.xl, padding: Spacing.md, borderWidth: 1, marginBottom: Spacing.md },
-
-  // Results
-  resultRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: Spacing.sm },
-  resultContent: { flex: 1 },
-  resultName: { fontSize: 16, fontWeight: '600' },
-  resultAction: { fontSize: 12, marginTop: 2 },
-  resultDate: { fontSize: 12 },
-
-  // Top items
-  topRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: Spacing.sm, gap: Spacing.md },
-  rankBadge: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  rankText: { fontSize: 12, fontWeight: '800' },
-  topName: { flex: 1, fontSize: 16, fontWeight: '600', textTransform: 'capitalize' },
-  topCount: { fontSize: 15, fontWeight: '700' },
-
-  emptyResult: { alignItems: 'center', paddingVertical: Spacing.lg },
-  emptyState: { alignItems: 'center', paddingTop: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: Spacing.md },
-  emptyText: { fontSize: 15, textAlign: 'center' },
-});
