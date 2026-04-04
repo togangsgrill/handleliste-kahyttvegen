@@ -408,15 +408,20 @@ export default function SettingsScreen() {
               </View>
 
               {changeMode === 'join' ? (
-                <TextInput
-                  style={{ backgroundColor: C.low, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 20, fontWeight: '800', letterSpacing: 4, color: C.primary, fontFamily: 'monospace', borderWidth: 1, borderColor: 'rgba(129,184,165,0.3)', textAlign: 'center' } as any}
-                  placeholder="INVKODE"
-                  placeholderTextColor={C.outline}
-                  value={joinCode}
-                  onChangeText={setJoinCode}
-                  autoCapitalize="characters"
-                  autoFocus
-                />
+                <View style={{ gap: 8 } as any}>
+                  <Text style={{ fontSize: 13, color: C.textSec, fontFamily: C.fontBody, textAlign: 'center' } as any}>
+                    Skriv inn invitasjonskoden du har fått fra et husholdningsmedlem
+                  </Text>
+                  <TextInput
+                    style={{ backgroundColor: C.low, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 20, fontWeight: '800', letterSpacing: 4, color: C.primary, fontFamily: 'monospace', borderWidth: 1, borderColor: 'rgba(129,184,165,0.3)', textAlign: 'center' } as any}
+                    placeholder="INVKODE"
+                    placeholderTextColor={C.outline}
+                    value={joinCode}
+                    onChangeText={setJoinCode}
+                    autoCapitalize="characters"
+                    autoFocus
+                  />
+                </View>
               ) : (
                 <TextInput
                   style={{ backgroundColor: C.low, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 17, color: C.text, fontFamily: C.fontBody, borderWidth: 1, borderColor: 'rgba(129,184,165,0.3)' } as any}

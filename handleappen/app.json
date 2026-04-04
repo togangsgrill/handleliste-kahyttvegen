@@ -23,7 +23,11 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "themeColor": "#006947",
+      "backgroundColor": "#d8fff0",
+      "shortName": "Handleliste",
+      "description": "Familiens handleliste"
     },
     "plugins": [
       "expo-router",

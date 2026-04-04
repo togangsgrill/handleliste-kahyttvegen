@@ -243,6 +243,9 @@ Se `COWORK-TRUMF-INSTRUKSJON.md` for instruksjoner om å importere handlehistori
 
 ## Tekniske notater
 - Supabase MCP er konfigurert — bruk `mcp__plugin_supabase_supabase__execute_sql` for SQL
+- **Vercel CLI** er installert (v50.39.0) — bruk `vercel` i terminalen
+- **Vercel-prosjekt:** `handleliste` under konto `togangsgrill` → https://handleliste-azure.vercel.app
+- Deploy med `vercel --prod` fra `handleappen/`-mappen
 - Anonym auth: RLS-policy for `households` INSERT er `WITH CHECK (true)`
 - `expo-localization` detekterer ikke alltid norsk på web — fallback sjekker `navigator.language`
 - `store_locations`-tabellen brukes av `useNearbyStores` — må ha koordinater (lat/lng)
