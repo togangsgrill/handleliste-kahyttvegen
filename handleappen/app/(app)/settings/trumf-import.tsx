@@ -143,6 +143,8 @@ export default function TrumfImportScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
   const householdId = useAuthStore((s) => s.householdId);
 
+  const isLoading = useAuthStore((s) => s.isLoading);
+
   const [status, setStatus] = useState<ImportStatus>('idle');
   const [receipts, setReceipts] = useState<TrumfReceipt[]>([]);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
@@ -151,12 +153,12 @@ export default function TrumfImportScreen() {
   const [showSnippet, setShowSnippet] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Start import automatisk når token er til stede
+  // Start fetch automatisk når auth er klar og token er til stede
   useEffect(() => {
-    if (token && householdId && status === 'idle') {
+    if (!isLoading && token && householdId && status === 'idle') {
       handleFetch();
     }
-  }, [token, householdId]);
+  }, [isLoading, token, householdId]);
 
   const handleFetch = async () => {
     if (!token) return;
@@ -291,6 +293,14 @@ export default function TrumfImportScreen() {
               Steg 2 av 2 — Importer
             </Text>
 
+            {/* Venter på auth */}
+            {isLoading && (
+              <View style={{ alignItems: 'center', paddingVertical: 32, gap: 12 } as any}>
+                <ActivityIndicator size="large" color={C.primary} />
+                <Text style={{ fontSize: 14, color: C.textSec, fontFamily: C.fontBody } as any}>Logger inn...</Text>
+              </View>
+            )}
+
             {status === 'fetching' && (
               <View style={{ alignItems: 'center', paddingVertical: 32, gap: 12 } as any}>
                 <ActivityIndicator size="large" color={C.primary} />
@@ -352,8 +362,33 @@ export default function TrumfImportScreen() {
               </View>
             )}
 
+            {/* Tom liste etter fetch — sannsynligvis feil API-endepunkt */}
+            {!isLoading && status === 'idle' && receipts.length === 0 && !error && (
+              <View style={{ alignItems: 'center', paddingVertical: 24, gap: 12 } as any}>
+                <Text style={{ fontSize: 14, color: C.textSec, textAlign: 'center', fontFamily: C.fontBody } as any}>
+                  Ingen kvitteringer funnet. Token kan ha utløpt, eller Trumf API-strukturen kan ha endret seg.
+                </Text>
+                <TouchableOpacity
+                  onPress={handleFetch}
+                  style={{ backgroundColor: C.primary, paddingVertical: 10, paddingHorizontal: 20, borderRadius: 9999 } as any}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff', fontFamily: C.fontBody } as any}>Prøv igjen</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {status === 'error' && (
-              <Text style={{ fontSize: 14, color: C.error, marginTop: 8, fontFamily: C.fontBody } as any}>{error}</Text>
+              <View style={{ paddingVertical: 16, gap: 12 } as any}>
+                <Text style={{ fontSize: 14, color: C.error, fontFamily: C.fontBody } as any}>{error}</Text>
+                <TouchableOpacity
+                  onPress={handleFetch}
+                  style={{ alignSelf: 'flex-start', backgroundColor: C.primary, paddingVertical: 10, paddingHorizontal: 20, borderRadius: 9999 } as any}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff', fontFamily: C.fontBody } as any}>Prøv igjen</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         )}
