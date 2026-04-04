@@ -302,26 +302,15 @@ export default function StatisticsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: color.bg }}>
       {/* Header */}
-      <View
-        style={[
-          {
-            backgroundColor: 'rgba(236,253,245,0.8)',
-            zIndex: 40,
-          },
-          { paddingTop: insets.top + 8 },
-          isWeb ? {
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            boxShadow: '0px 10px 30px rgba(0,54,42,0.06)',
-          } as any : {},
-        ]}
-      >
+      {isWeb && <View style={{ height: 58, marginTop: 'env(safe-area-inset-top, 0px)' } as any} />}
+      <View style={{
+        backgroundColor: 'rgba(236,253,245,0.92)', zIndex: 40,
+        ...(isWeb ? { paddingTop: 'env(safe-area-inset-top, 0px)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'fixed', top: 0, left: 0, right: 0 } as any : { paddingTop: insets.top + 8 }),
+      }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 14 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <MaterialIcons name="spa" size={22} color={color.primary} />
-            <Text style={{ fontSize: 20, fontWeight: '700', color: color.onSurface, fontStyle: 'italic', letterSpacing: -0.5, fontFamily: font.headline }}>
-              Handleliste
-            </Text>
+            <MaterialIcons name="shopping-basket" size={22} color={color.primary} />
+            <Text style={{ fontSize: 20, fontWeight: '800', color: color.onSurface, letterSpacing: -0.5, fontFamily: font.headline }}>Handleliste</Text>
           </View>
         </View>
       </View>
@@ -329,9 +318,9 @@ export default function StatisticsScreen() {
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 16,
-          paddingTop: 24,
-          paddingBottom: 120,
-          maxWidth: 680,
+          paddingTop: 28,
+          paddingBottom: 160,
+          maxWidth: 720,
           alignSelf: 'center' as any,
           width: '100%' as any,
         }}
