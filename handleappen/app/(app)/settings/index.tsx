@@ -317,6 +317,24 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Trumf-import */}
+        <TouchableOpacity
+          onPress={() => router.push('/(app)/settings/trumf-import')}
+          activeOpacity={0.8}
+          style={[{ backgroundColor: C.white, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20, flexDirection: 'row', alignItems: 'center', gap: 16 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}] as any}
+        >
+          <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#e8003c12', justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontSize: 22 }}>🛒</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Importer fra Trumf</Text>
+            <Text style={{ fontSize: 13, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
+              Hent handlehistorikk for prisestimater og smarte forslag
+            </Text>
+          </View>
+          <MaterialIcons name="chevron-right" size={22} color={C.outline} />
+        </TouchableOpacity>
+
         {/* Recent activity */}
         {activity.length > 0 && (
           <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
