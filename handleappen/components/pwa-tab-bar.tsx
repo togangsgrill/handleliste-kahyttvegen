@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Platform, TouchableOpacity, View, Text } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -9,24 +8,6 @@ const C = {
   bg: 'rgba(255,255,255,0.92)',
 };
 
-// Returns bottom safe area inset in pixels, works in iOS PWA standalone
-function usePWASafeBottom(): number {
-  const [bottom, setBottom] = useState(0);
-  useEffect(() => {
-    if (Platform.OS !== 'web') return;
-    // Read the CSS env variable via a temporary element
-    const el = document.createElement('div');
-    el.style.cssText = 'position:fixed;bottom:env(safe-area-inset-bottom,0px);height:0;width:0;visibility:hidden;pointer-events:none;';
-    document.body.appendChild(el);
-    const rect = el.getBoundingClientRect();
-    // bottom of viewport minus top of element = safe area
-    const safeBottom = window.innerHeight - rect.top;
-    document.body.removeChild(el);
-    setBottom(Math.max(0, safeBottom));
-  }, []);
-  return bottom;
-}
-
 const ICONS: Record<string, { name: any; label: string }> = {
   lists:      { name: 'list.bullet',    label: 'LISTER' },
   history:    { name: 'clock.fill',     label: 'HISTORIKK' },
@@ -35,34 +16,28 @@ const ICONS: Record<string, { name: any; label: string }> = {
 };
 
 export function PWATabBar({ state, navigation }: BottomTabBarProps) {
-  const safeBottom = usePWASafeBottom();
-  const tabHeight = 56;
-  const totalHeight = tabHeight + safeBottom;
-
   return (
     <View
       style={{
-        position: 'absolute' as const,
+        position: 'fixed' as any,
         left: 0,
         right: 0,
         bottom: 0,
-        height: totalHeight,
         backgroundColor: C.bg,
         borderTopWidth: 1,
         borderTopColor: 'rgba(167,241,216,0.2)',
         flexDirection: 'row' as const,
         alignItems: 'flex-start' as const,
-        paddingTop: 6,
-        paddingBottom: safeBottom,
-        ...(Platform.OS === 'web' ? {
-          backdropFilter: 'blur(40px)',
-          WebkitBackdropFilter: 'blur(40px)',
-          boxShadow: '0 -8px 32px rgba(0,54,42,0.08)',
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          zIndex: 9999,
-        } as any : {}),
-      }}
+        paddingTop: 8,
+        paddingBottom: 'env(safe-area-inset-bottom, 8px)' as any,
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        boxShadow: '0 -8px 32px rgba(0,54,42,0.08)',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        zIndex: 9999,
+        minHeight: 56,
+      } as any}
     >
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;

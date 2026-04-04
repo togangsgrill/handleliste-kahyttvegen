@@ -27,14 +27,17 @@ if (!html.includes(after)) {
   console.log('Viewport already patched, skipping.');
 }
 
-// 1b. Fix height: use 100dvh for proper PWA standalone viewport on iOS
+// 1b. Fix height and tab bar positioning for iOS PWA standalone
 const heightFix = `
     <style id="pwa-height-fix">
-      html, body, #root { height: 100dvh !important; }
+      html, body, #root { height: 100%; }
+      @supports (height: 100dvh) {
+        html, body, #root { height: 100dvh; }
+      }
     </style>`;
 if (!html.includes('pwa-height-fix')) {
   html = html.replace('</head>', heightFix + '\n  </head>');
-  console.log('Injected 100dvh height fix');
+  console.log('Injected height fix');
 }
 
 // 2. Inject PWA meta tags if not already present
