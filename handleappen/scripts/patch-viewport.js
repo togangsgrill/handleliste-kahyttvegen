@@ -15,7 +15,7 @@ let html = fs.readFileSync(file, 'utf8');
 
 // 1. Patch viewport
 const before = 'width=device-width, initial-scale=1, shrink-to-fit=no"';
-const after  = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"';
+const after  = 'width=device-width, initial-scale=1, viewport-fit=cover"';
 if (!html.includes(after)) {
   if (!html.includes(before)) {
     console.error('Could not find viewport meta to patch.');
