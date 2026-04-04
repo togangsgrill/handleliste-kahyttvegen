@@ -241,6 +241,45 @@ Se `COWORK-TRUMF-INSTRUKSJON.md` for instruksjoner om å importere handlehistori
 | **Handledeteksjon** | Medium | `detected_visits`-tabell og pending-visit-UI i historikk finnes. Mangler: selve deteksjonslogikken (geofencing eller manuell trigger). |
 | **Eksport CSV** | Lav | Ikke startet. |
 
+## Pågående arbeid — Felles importflyt (startet 2026-04-04 kveld)
+
+### Bakgrunn
+Oppskriftsimport (`recipe.tsx`) og ukesmeny-import (`meal-plan.tsx` modal) var to separate, inkonsistente flyter. Oppskrift hadde ingrediensvalg, `is_staple`-filter, allergenvisning. Ukesmeny manglet alt dette.
+
+### Hva er gjort
+1. **`lib/claude.ts`** — `IS_STAPLE_RULE` felles konstant, `parseMealPlanTitles` og `parseMealPlanIngredients` splittet til separate funksjoner
+2. **`hooks/useRecipeImport.ts`** — NY FIL, ferdig. Felles hook med all logikk:
+   - Støtter tre inputtyper: `image`, `pdf`, `text`
+   - Steg-maskin: `input` → `select-recipes` (kun PDF) → `ingredients` → `done`
+   - PDF: henter titler raskt, ingredienser per oppskrift i bakgrunnen
+   - Bilde/tekst: ett kall, hopper rett til ingredienser
+   - Lagrer oppskrifter + ingredienser til DB, og valgfritt til handleliste
+   - Eksporterer `isStaple`, `formatQty`, `scaleIngredients`, `normalizeSourceType`, `SOURCE_TYPE_LABELS`
+
+### Gjenstår å bygge
+| # | Oppgave | Status |
+|---|---------|--------|
+| 1 | `hooks/useRecipeImport.ts` | ✅ Ferdig |
+| 2 | `app/(app)/lists/import.tsx` — felles importskjerm (UI) | ❌ Ikke startet |
+| 3 | `app/(app)/lists/_layout.tsx` — registrer import-skjerm | ❌ Ikke startet |
+| 4 | `meal-plan.tsx` — erstatt innebygd import-modal med lenke til `/import` | ❌ Ikke startet |
+| 5 | `recipe.tsx` — redirect til `/import` (eller behold som alias) | ❌ Ikke startet |
+| 6 | Test + deploy | ❌ Ikke startet |
+
+### UI-plan for import.tsx
+- Tab-velger øverst: 📷 Bilde / 📄 PDF / 📝 Tekst
+- PDF med >1 oppskrift → "Velg oppskrifter"-steg med checkboxer + spinner per rad
+- Ingredienser-steg: porsjons-skalering, ikke-basisvarer forvalgt, basisvarer i egen seksjon, allergen-badges
+- Listevelger + "Lagre X oppskrifter og legg Y ingredienser i liste"
+- Bruk eksisterende design fra `recipe.tsx` (step indicator, cardStyle, inline styles med C-objekt)
+
+### Andre endringer gjort i denne sesjonen (2026-04-04 kveld)
+- **Ukesmeny PDF-import fikset:** ingredienser hentes nå fra PDF (prompten ba eksplisitt om å IKKE hente dem)
+- **AI-gjettede ingredienser slettet** for 5 feilimporterte oppskrifter
+- **`generateRecipeIngredients`-fallback fjernet** fra meal-plan.tsx (gjettet feil ingredienser)
+- **Dagskort i ukesmeny** viser nå `🛒 X ingredienser klare` / `⏳ henter ingredienser...`
+- **index.tsx** fikset: venter nå på auth init før redirect
+
 ## Tekniske notater
 - Supabase MCP er konfigurert — bruk `mcp__plugin_supabase_supabase__execute_sql` for SQL
 - **Vercel CLI** er installert (v50.39.0) — bruk `vercel` i terminalen
