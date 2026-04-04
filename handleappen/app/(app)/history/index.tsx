@@ -260,11 +260,12 @@ export default function HistoryScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       {/* Header */}
+      {isWeb && <View style={{ height: insets.top + 58 }} />}
       <View style={{
-        backgroundColor: 'rgba(236,253,245,0.8)',
+        backgroundColor: 'rgba(236,253,245,0.92)',
         paddingTop: insets.top + 8,
         zIndex: 40,
-        ...(isWeb ? { backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'sticky', top: 0 } as any : {}),
+        ...(isWeb ? { backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'fixed', top: 0, left: 0, right: 0 } as any : {}),
       }}>
         <View style={{ paddingHorizontal: 24, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 10 } as any}>
           <MaterialIcons name="spa" size={22} color={C.primary} />
