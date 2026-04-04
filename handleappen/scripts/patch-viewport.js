@@ -38,19 +38,25 @@ if (!html.includes('pwa-height-fix')) {
 }
 
 // 2. Inject PWA meta tags if not already present
+// black-translucent is critical: with "default" iOS clips the viewport top in standalone mode
 const pwaTags = `
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Handleliste" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="theme-color" content="#006947" />
+    <meta name="theme-color" content="#d8fff0" />
     <link rel="apple-touch-icon" href="/assets/images/icon.png" />`;
 
 if (!html.includes('apple-mobile-web-app-capable')) {
   html = html.replace('</head>', pwaTags + '\n  </head>');
   console.log('Injected PWA meta tags');
 } else {
-  console.log('PWA meta tags already present, skipping.');
+  // Replace status-bar-style in case it was previously set to "default"
+  html = html.replace(
+    /content="default"(\s*\/>|\s*>)(\s*<meta name="apple-mobile-web-app-title)/,
+    'content="black-translucent"$1$2'
+  );
+  console.log('PWA meta tags already present, ensured black-translucent.');
 }
 
 fs.writeFileSync(file, html, 'utf8');
@@ -65,9 +71,9 @@ if (!fs.existsSync(distIconDir)) {
 fs.copyFileSync(srcIcon, distIcon);
 console.log('Copied icon.png to dist/assets/images/');
 
-// 4. Write manifest.json if not present
+// 4. Always write manifest.json (overwrite to ensure it's up to date)
 const manifestPath = path.join(__dirname, '../dist/manifest.json');
-if (!fs.existsSync(manifestPath)) {
+if (true) {
   const manifest = {
     name: 'Handleliste - Kahyttvegen',
     short_name: 'Handleliste',
