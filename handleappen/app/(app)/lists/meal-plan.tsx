@@ -122,6 +122,7 @@ export default function MealPlanScreen() {
   const weekStartStr = formatWeekStart(weekStart);
 
   const [slots, setSlots] = useState<MealSlot[]>([]);
+  const [ingredientCounts, setIngredientCounts] = useState<Record<string, number>>({});
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
   const [loading, setLoading] = useState(true);
@@ -215,7 +216,7 @@ export default function MealPlanScreen() {
     setMpSaving(false);
     setMpDone(true);
 
-    // Hent ingredienser i bakgrunnen — kjører etter at bruker har lukket modalen
+    // Hent ingredienser i bakgrunnen — oppdater badge etterhvert som de kommer inn
     if (savedRecipes.length > 0) {
       (async () => {
         for (const saved of savedRecipes) {
@@ -229,6 +230,8 @@ export default function MealPlanScreen() {
                 unit: ing.unit,
               }));
               await supabase.from('recipe_ingredients').insert(rows);
+              // Oppdater badge umiddelbart
+              setIngredientCounts((prev) => ({ ...prev, [saved.id]: ingredients.length }));
             }
           } catch (e) {
             console.error(`Bakgrunn: kunne ikke hente ingredienser for "${saved.title}":`, e);
@@ -281,6 +284,21 @@ export default function MealPlanScreen() {
         : { day_of_week: i, recipe_id: null, custom_name: null, servings: 4 };
     });
     setSlots(filled);
+
+    // Hent ingredienstellingen for alle oppskrifter i uken
+    const recipeIds = filled.filter((s) => s.recipe_id).map((s) => s.recipe_id!);
+    if (recipeIds.length > 0) {
+      const { data: counts } = await supabase
+        .from('recipe_ingredients')
+        .select('recipe_id')
+        .in('recipe_id', recipeIds);
+      const tally: Record<string, number> = {};
+      for (const row of counts ?? []) {
+        tally[row.recipe_id] = (tally[row.recipe_id] ?? 0) + 1;
+      }
+      setIngredientCounts(tally);
+    }
+
     setLoading(false);
   }, [householdId, weekStartStr]);
 
@@ -545,10 +563,26 @@ export default function MealPlanScreen() {
                           <Text style={{ fontSize: 16, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any} numberOfLines={1}>
                             {slot.recipe!.name}
                           </Text>
-                          <Text style={{ fontSize: 12, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
-                            {slot.servings} porsjoner
-                            {slot.recipe!.source_label ? ` · ${slot.recipe!.source_label}` : ''}
-                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 } as any}>
+                            <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>
+                              {slot.servings} porsjoner
+                            </Text>
+                            {slot.recipe_id && (ingredientCounts[slot.recipe_id] ?? 0) > 0 ? (
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#e8faf3', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 } as any}>
+                                <Text style={{ fontSize: 10 } as any}>🛒</Text>
+                                <Text style={{ fontSize: 10, fontWeight: '700', color: '#006947', fontFamily: C.fontBody } as any}>
+                                  {ingredientCounts[slot.recipe_id]} ingredienser klare
+                                </Text>
+                              </View>
+                            ) : slot.recipe_id ? (
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fff8e1', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 } as any}>
+                                <Text style={{ fontSize: 10 } as any}>⏳</Text>
+                                <Text style={{ fontSize: 10, fontWeight: '600', color: '#b45309', fontFamily: C.fontBody } as any}>
+                                  henter ingredienser...
+                                </Text>
+                              </View>
+                            ) : null}
+                          </View>
                         </>
                       ) : (
                         <Text style={{ fontSize: 15, color: C.outline, fontFamily: C.fontBody } as any}>
