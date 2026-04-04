@@ -1,12 +1,18 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export default function AppLayout() {
   const { t } = useTranslation();
+  const session = useAuthStore((s) => s.session);
+  const isLoading = useAuthStore((s) => s.isLoading);
+
+  if (isLoading) return null;
+  if (!session) return <Redirect href="/(auth)/login" />;
 
   return (
     <Tabs
