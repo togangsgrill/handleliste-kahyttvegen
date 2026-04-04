@@ -50,6 +50,14 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.textContent = `body { font-family: 'Manrope', system-ui, sans-serif; }`;
   document.head.appendChild(style);
+
+  // DEBUG: show PWA info overlay
+  const isStandalone = (window.navigator as any).standalone === true;
+  const dbg = document.createElement('div');
+  dbg.id = 'pwa-debug';
+  dbg.style.cssText = `position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(255,0,0,0.85);color:#fff;font-size:11px;padding:4px 8px;font-family:monospace;`;
+  dbg.textContent = `standalone=${isStandalone} | innerH=${window.innerHeight} | screenH=${window.screen.height} | safeT=${getComputedStyle(document.documentElement).getPropertyValue('--sat')}`;
+  document.body.appendChild(dbg);
 }
 
 export default function RootLayout() {
