@@ -138,7 +138,7 @@ export default function MealPlanScreen() {
   const [mpParsing, setMpParsing] = useState(false);
   const [mpProgress, setMpProgress] = useState<string | null>(null);
   const [mpError, setMpError] = useState<string | null>(null);
-  const [mpParsedRecipes, setMpParsedRecipes] = useState<(MealPlanRecipe & { selected: boolean; loadingIngredients: boolean })[]>([]);
+  const [mpParsedRecipes, setMpParsedRecipes] = useState<(MealPlanRecipe & { selected: boolean })[]>([]);
   const [mpSaving, setMpSaving] = useState(false);
   const [mpDone, setMpDone] = useState(false);
 
@@ -160,32 +160,15 @@ export default function MealPlanScreen() {
         setMpError(null);
         setMpParsedRecipes([]);
 
-        // Steg 1: Hent titler (raskt) — vis lista umiddelbart
+        // Hent bare titler (raskt ~2 sek) — vis lista umiddelbart
         setMpParsing(true);
         setMpProgress('Leser oppskriftsnavn...');
         try {
           const recipes = await parseMealPlanTitles(b64, mt);
-          const initial = recipes.map((r) => ({ ...r, selected: true, loadingIngredients: true }));
-          setMpParsedRecipes(initial);
-          setMpParsing(false);
-          setMpProgress(null);
-
-          // Steg 2: Hent ingredienser i bakgrunnen, én om gangen
-          for (let i = 0; i < recipes.length; i++) {
-            const recipe = recipes[i];
-            try {
-              const ingredients = await parseMealPlanIngredients(b64, mt, recipe.title);
-              setMpParsedRecipes((prev) =>
-                prev.map((r, idx) => idx === i ? { ...r, ingredients, loadingIngredients: false } : r)
-              );
-            } catch {
-              setMpParsedRecipes((prev) =>
-                prev.map((r, idx) => idx === i ? { ...r, ingredients: [], loadingIngredients: false } : r)
-              );
-            }
-          }
+          setMpParsedRecipes(recipes.map((r) => ({ ...r, selected: true })));
         } catch (err) {
           setMpError(err instanceof Error ? err.message : 'Ukjent feil');
+        } finally {
           setMpParsing(false);
           setMpProgress(null);
         }
@@ -199,16 +182,17 @@ export default function MealPlanScreen() {
     if (!householdId) return;
     setMpSaving(true);
     const selected = mpParsedRecipes.filter((r) => r.selected);
+    const b64 = mpImageBase64!;
+    const mt = mpImageMediaType;
 
+    // Lagre oppskrifter umiddelbart (uten å vente på ingredienser)
+    const savedRecipes: { id: string; title: string }[] = [];
     for (const recipe of selected) {
-      // Sjekk om oppskriften allerede finnes (unngå duplikater)
       const { data: existingRecipe } = await supabase.from('recipes')
         .select('id')
         .eq('household_id', householdId)
         .ilike('name', recipe.title)
         .maybeSingle();
-
-      let recipeId = existingRecipe?.id ?? null;
 
       if (!existingRecipe) {
         const { data: inserted } = await supabase.from('recipes').insert({
@@ -220,29 +204,38 @@ export default function MealPlanScreen() {
           description: recipe.description ?? null,
           description_is_ai: true,
         }).select('id').single();
-        recipeId = inserted?.id ?? null;
-      }
-
-      // Lagre ingredienser fra PDF hvis de finnes og oppskriften er ny
-      if (recipeId && !existingRecipe && recipe.ingredients && recipe.ingredients.length > 0) {
-        const rows = recipe.ingredients.map((ing) => ({
-          recipe_id: recipeId,
-          name: ing.name,
-          quantity: ing.quantity,
-          unit: ing.unit,
-        }));
-        const { error } = await supabase.from('recipe_ingredients').insert(rows);
-        if (error) console.error('Feil ved lagring av ingredienser:', error);
+        if (inserted) savedRecipes.push({ id: inserted.id, title: recipe.title });
       }
     }
 
-    // Oppdater oppskriftslisten
+    // Oppdater oppskriftslisten og lukk modal umiddelbart
     const { data: updatedRecipes } = await supabase.from('recipes').select('id, name, base_servings, source_label, description')
       .eq('household_id', householdId).order('name');
     setRecipes(updatedRecipes ?? []);
-
     setMpSaving(false);
     setMpDone(true);
+
+    // Hent ingredienser i bakgrunnen — kjører etter at bruker har lukket modalen
+    if (savedRecipes.length > 0) {
+      (async () => {
+        for (const saved of savedRecipes) {
+          try {
+            const ingredients = await parseMealPlanIngredients(b64, mt, saved.title);
+            if (ingredients.length > 0) {
+              const rows = ingredients.map((ing) => ({
+                recipe_id: saved.id,
+                name: ing.name,
+                quantity: ing.quantity,
+                unit: ing.unit,
+              }));
+              await supabase.from('recipe_ingredients').insert(rows);
+            }
+          } catch (e) {
+            console.error(`Bakgrunn: kunne ikke hente ingredienser for "${saved.title}":`, e);
+          }
+        }
+      })();
+    }
   };
 
   const resetMealPlanImport = () => {
@@ -255,7 +248,6 @@ export default function MealPlanScreen() {
     setMpProgress(null);
   };
 
-  const mpStillLoadingIngredients = mpParsedRecipes.some((r) => r.loadingIngredients);
 
   const refreshRecipes = useCallback(async () => {
     if (!householdId) return;
@@ -735,9 +727,6 @@ export default function MealPlanScreen() {
                                   {recipe.servings ?? 4} porsjoner
                                 </Text>
                               </View>
-                              {recipe.loadingIngredients && (
-                                <ActivityIndicator size="small" color={C.outline} />
-                              )}
                             </TouchableOpacity>
                           ))}
                         </View>
@@ -763,9 +752,7 @@ export default function MealPlanScreen() {
                           {mpSaving
                             ? <><ActivityIndicator size="small" color={C.white} /><Text style={{ fontSize: 16, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>Lagrer...</Text></>
                             : <Text style={{ fontSize: 16, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>
-                                {mpStillLoadingIngredients
-                                  ? `Lagre (henter ingredienser...)`
-                                  : `Lagre ${mpParsedRecipes.filter((r) => r.selected).length} oppskrifter`}
+                                Lagre {mpParsedRecipes.filter((r) => r.selected).length} oppskrifter
                               </Text>
                           }
                         </TouchableOpacity>
