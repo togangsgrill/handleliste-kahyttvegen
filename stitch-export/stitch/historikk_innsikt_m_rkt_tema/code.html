@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>History &amp; Insights - The Fluid Pantry</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,700&amp;family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#006947",
+                    "on-primary-container": "#005c3e",
+                    "on-background": "#d8fff0",
+                    "surface-container-lowest": "#00110c",
+                    "primary-fixed-dim": "#00eea6",
+                    "secondary-fixed": "#5afcd2",
+                    "primary-fixed": "#00feb2",
+                    "surface-container-highest": "#2f6555",
+                    "tertiary": "#006575",
+                    "surface-bright": "#002018",
+                    "secondary-dim": "#005b48",
+                    "inverse-surface": "#d8fff0",
+                    "primary-container": "#00feb2",
+                    "error": "#ffb4ab",
+                    "on-tertiary-fixed": "#00343c",
+                    "surface": "#00110c",
+                    "on-secondary-container": "#005d4a",
+                    "tertiary-dim": "#005866",
+                    "on-surface-variant": "#81b8a5",
+                    "on-primary": "#c8ffe0",
+                    "tertiary-fixed": "#00dcfd",
+                    "secondary-container": "#005b48",
+                    "background": "#00110c",
+                    "on-tertiary": "#dcf7ff",
+                    "on-error": "#690005",
+                    "on-primary-fixed-variant": "#006746",
+                    "surface-container": "#002018",
+                    "surface-container-high": "#1a362e",
+                    "inverse-on-surface": "#00110c",
+                    "outline-variant": "#4c8170",
+                    "on-error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#47edc4",
+                    "surface-variant": "#2f6555",
+                    "primary-dim": "#005c3d",
+                    "secondary": "#006853",
+                    "on-secondary-fixed-variant": "#006853",
+                    "tertiary-fixed-dim": "#00cdeb",
+                    "on-tertiary-fixed-variant": "#005360",
+                    "on-surface": "#d8fff0",
+                    "tertiary-container": "#00dcfd",
+                    "error-container": "#93000a",
+                    "on-secondary": "#c4ffea",
+                    "on-primary-fixed": "#00472f",
+                    "on-secondary-fixed": "#004939",
+                    "surface-dim": "#00110c",
+                    "outline": "#81b8a5",
+                    "surface-tint": "#006947",
+                    "error-dim": "#9f0519",
+                    "surface-container-low": "#001813",
+                    "on-tertiary-container": "#004955",
+                    "inverse-primary": "#00feb2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        font-family: 'Manrope', sans-serif;
+      }
+      h1, h2, h3 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full z-40 bg-background/80 backdrop-blur-xl shadow-[0px_10px_30px_rgba(0,0,0,0.3)]">
+<div class="flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed">spa</span>
+<span class="text-xl font-bold text-on-background italic font-['Plus_Jakarta_Sans'] tracking-tight">The Fluid Pantry</span>
+</div>
+<div class="flex gap-4 items-center">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container p-2 rounded-full transition-colors">search</button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-highest">
+<img alt="User Profile" data-alt="Portrait of a smiling person with a soft natural background, clean and professional lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbD9jyCbtY7U7t0grUwA6rOPaC-FFIL_tkCFt1axZscCBw-rnC7TE9me8a7BHa5iH9eo1Z7J6cZkJC6_w-YEsf3KkcSMKZpGUNdeFlmXz7d2MQZuVJaIIEwaCfM_aekP_67OXdLiQOXIPyP07Li5bLosvL0xcIeApbZbehExJs0sm4gqejyaio38qEQ3WmOK6oSs3xlpvtp_Y5LgGl8X2pQR6Ur52FpC_1ZPYTxUP1-gH_hOL-9wTMyUchO4kxOe_QvrNQXPsP_YcC"/>
+</div>
+</div>
+</div>
+</header>
+<main class="px-6 py-8 space-y-8 max-w-4xl mx-auto">
+<!-- Strava-inspired Activity Banner -->
+<section class="relative overflow-hidden bg-gradient-to-br from-primary-dim to-surface-container-lowest text-on-background rounded-[2rem] p-8 shadow-[0px_20px_40px_rgba(0,0,0,0.4)] border border-primary/20">
+<div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div>
+<div class="inline-flex items-center gap-2 bg-primary/20 px-3 py-1 rounded-full mb-4">
+<span class="material-symbols-outlined text-[16px] text-primary-fixed">location_on</span>
+<span class="text-[12px] font-bold tracking-widest uppercase text-primary-fixed">Smart Detection</span>
+</div>
+<h2 class="text-2xl md:text-3xl font-extrabold font-headline leading-tight">Did you shop at <span class="text-primary-fixed underline decoration-2 underline-offset-4">Kiwi Torshov</span> at 14:23?</h2>
+<p class="text-on-surface-variant mt-2 font-medium">We detected a potential grocery trip nearby.</p>
+</div>
+<div class="flex gap-3">
+<button class="bg-primary-fixed text-on-primary-fixed px-8 py-3 rounded-full font-bold shadow-lg hover:scale-95 transition-transform">Yes</button>
+<button class="bg-surface-container-highest text-on-surface px-8 py-3 rounded-full font-bold hover:bg-surface-variant transition-colors">No</button>
+</div>
+</div>
+<!-- Decorative organic shapes -->
+<div class="absolute -right-10 -bottom-10 w-48 h-48 bg-primary/10 rounded-full blur-3xl"></div>
+<div class="absolute -left-10 -top-10 w-32 h-32 bg-secondary-fixed/5 rounded-full blur-2xl"></div>
+</section>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- Previous Trips (List) -->
+<div class="md:col-span-8 space-y-4">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-xl font-bold font-headline flex items-center gap-2 text-on-background">
+<span class="material-symbols-outlined text-primary-fixed">calendar_today</span>
+                        Previous Trips
+                    </h3>
+<button class="text-primary-fixed font-bold text-sm uppercase tracking-wider">See All</button>
+</div>
+<div class="space-y-4">
+<!-- Trip Card 1 -->
+<div class="bg-surface-container-low p-5 rounded-[1.5rem] flex items-center justify-between group hover:bg-surface-container transition-colors border border-outline-variant/10">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-highest rounded-2xl flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-primary-fixed">shopping_basket</span>
+</div>
+<div>
+<h4 class="font-bold text-lg leading-tight text-on-surface">Kiwi Torshov</h4>
+<p class="text-on-surface-variant text-sm">Yesterday, 18:45</p>
+</div>
+</div>
+<div class="text-right">
+<span class="block font-extrabold text-lg text-on-background">$42.50</span>
+<span class="text-[10px] uppercase font-bold text-primary-fixed bg-primary/20 px-2 py-0.5 rounded-full border border-primary/30">8 items</span>
+</div>
+</div>
+<!-- Trip Card 2 -->
+<div class="bg-surface-container-low p-5 rounded-[1.5rem] flex items-center justify-between group hover:bg-surface-container transition-colors border border-outline-variant/10">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-highest rounded-2xl flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-primary-fixed">store</span>
+</div>
+<div>
+<h4 class="font-bold text-lg leading-tight text-on-surface">REMA 1000</h4>
+<p class="text-on-surface-variant text-sm">Oct 24, 09:12</p>
+</div>
+</div>
+<div class="text-right">
+<span class="block font-extrabold text-lg text-on-background">$118.20</span>
+<span class="text-[10px] uppercase font-bold text-primary-fixed bg-primary/20 px-2 py-0.5 rounded-full border border-primary/30">22 items</span>
+</div>
+</div>
+<!-- Trip Card 3 -->
+<div class="bg-surface-container-low p-5 rounded-[1.5rem] flex items-center justify-between group hover:bg-surface-container transition-colors border border-outline-variant/10">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-highest rounded-2xl flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-primary-fixed">eco</span>
+</div>
+<div>
+<h4 class="font-bold text-lg leading-tight text-on-surface">Farmer's Market</h4>
+<p class="text-on-surface-variant text-sm">Oct 22, 11:30</p>
+</div>
+</div>
+<div class="text-right">
+<span class="block font-extrabold text-lg text-on-background">$28.00</span>
+<span class="text-[10px] uppercase font-bold text-primary-fixed bg-primary/20 px-2 py-0.5 rounded-full border border-primary/30">5 items</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Sidebar Insights (Savings & Top Items) -->
+<div class="md:col-span-4 space-y-8">
+<!-- Savings Card -->
+<div class="bg-secondary-container p-6 rounded-[2rem] text-on-secondary-container border border-secondary/20">
+<span class="material-symbols-outlined mb-2 text-secondary-fixed">trending_down</span>
+<h4 class="text-sm font-bold uppercase tracking-widest opacity-80">Monthly Savings</h4>
+<div class="mt-2 flex items-baseline gap-1">
+<span class="text-4xl font-extrabold font-headline text-secondary-fixed">12%</span>
+<span class="text-sm font-bold opacity-80">less than Sept</span>
+</div>
+<p class="mt-4 text-sm leading-relaxed font-medium">You've saved roughly <span class="font-bold text-secondary-fixed">$54</span> by reducing impulse purchases at checkout.</p>
+</div>
+<!-- Top Items (Bar Chart Inspired) -->
+<div class="bg-surface-container-high p-6 rounded-[2rem] border border-outline-variant/10">
+<h3 class="text-lg font-bold font-headline mb-6 flex items-center gap-2 text-on-background">
+<span class="material-symbols-outlined text-primary-fixed">bar_chart</span>
+                        Top Items
+                    </h3>
+<div class="space-y-6">
+<!-- Chart Item 1 -->
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold text-on-surface">
+<span>Oat Milk</span>
+<span class="text-primary-fixed">12x</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed rounded-full w-[90%]"></div>
+</div>
+</div>
+<!-- Chart Item 2 -->
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold text-on-surface">
+<span>Avocados</span>
+<span class="text-primary-fixed">8x</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed rounded-full w-[65%]"></div>
+</div>
+</div>
+<!-- Chart Item 3 -->
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold text-on-surface">
+<span>Greek Yogurt</span>
+<span class="text-primary-fixed">6x</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed rounded-full w-[45%]"></div>
+</div>
+</div>
+<!-- Chart Item 4 -->
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold text-on-surface">
+<span>Sourdough</span>
+<span class="text-primary-fixed">4x</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed rounded-full w-[30%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bento Grid Insights (Extra encouraging context) -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-surface-container-low p-8 rounded-[2rem] flex flex-col justify-between shadow-[0px_10px_30px_rgba(0,0,0,0.2)] border border-outline-variant/10">
+<div>
+<h3 class="text-xl font-bold font-headline mb-2 text-on-background">Sustainable Choice</h3>
+<p class="text-on-surface-variant font-medium">80% of your items this week were seasonal and locally sourced. Great job!</p>
+</div>
+<div class="mt-8 flex gap-2">
+<span class="material-symbols-outlined text-primary-fixed" style="font-variation-settings: 'FILL' 1;">eco</span>
+<span class="material-symbols-outlined text-primary-fixed" style="font-variation-settings: 'FILL' 1;">eco</span>
+<span class="material-symbols-outlined text-primary-fixed" style="font-variation-settings: 'FILL' 1;">eco</span>
+<span class="material-symbols-outlined text-surface-variant">eco</span>
+</div>
+</div>
+<div class="relative bg-surface-container-highest text-on-surface p-8 rounded-[2rem] overflow-hidden group border border-primary/20">
+<div class="relative z-10">
+<h3 class="text-xl font-bold font-headline mb-2 text-on-background">Upcoming List</h3>
+<p class="text-on-surface-variant font-medium">Based on your history, you'll need Coffee and Olive Oil in 3 days.</p>
+</div>
+<div class="mt-8 relative z-10">
+<button class="bg-primary-fixed text-on-primary-fixed font-bold px-6 py-2 rounded-full hover:scale-105 transition-transform">Add to List</button>
+</div>
+<div class="absolute right-0 bottom-0 opacity-5 transform translate-y-4 translate-x-4">
+<span class="material-symbols-outlined text-[120px] text-on-background">inventory_2</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-8 pt-4 bg-background/90 backdrop-blur-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.4)] rounded-t-[1.5rem] border-t border-outline-variant/10">
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-6 py-2 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">format_list_bulleted</span>
+<span class="font-['Manrope'] text-[11px] font-bold uppercase tracking-wider mt-1">Lists</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-surface-container-highest text-primary-fixed rounded-2xl px-6 py-2 transition-transform duration-200 ease-out active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="font-['Manrope'] text-[11px] font-bold uppercase tracking-wider mt-1">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-6 py-2 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-['Manrope'] text-[11px] font-bold uppercase tracking-wider mt-1">Statistics</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-6 py-2 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-['Manrope'] text-[11px] font-bold uppercase tracking-wider mt-1">Settings</span>
+</a>
+</nav>
+</body></html>

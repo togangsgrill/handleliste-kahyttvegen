@@ -157,23 +157,21 @@ export interface MealPlanRecipe {
   title: string;
   servings: number | null;
   description?: string | null;
+  ingredients?: { name: string; quantity: number; unit: string | null; is_staple: boolean }[];
 }
 
 export interface MealPlanParseResult {
   recipes: MealPlanRecipe[];
 }
 
-const MEAL_PLAN_SYSTEM = `Du er en ekspert på å tolke norske ukesmenyer fra bilder og PDF-sider.
+const MEAL_PLAN_TITLES_SYSTEM = `Du er en ekspert på å tolke norske ukesmenyer fra bilder og PDF-sider.
 En ukesmeny inneholder typisk 4–6 oppskrifter (f.eks. ukens fisk, ukens suppe, ukens vegetar, ukens pasta, ukens ekstra).
 
-Returner JSON med dette formatet — KUN tittel og porsjoner, INGEN ingredienser, INGEN description:
+Returner JSON med dette formatet — KUN tittel og porsjoner:
 {
   "recipes": [
     {"title": "Laks med dill og poteter", "servings": 4},
-    {"title": "Potet og sellerirotsuppe", "servings": 6},
-    {"title": "Indisk dal", "servings": 4},
-    {"title": "Lammebolognese", "servings": 6},
-    {"title": "Påskens suksessterte", "servings": 8}
+    {"title": "Potet og sellerirotsuppe", "servings": 6}
   ]
 }
 
@@ -182,28 +180,78 @@ Regler:
 - servings: antall porsjoner fra oppskriften, eller 4 hvis ikke oppgitt
 - Returner KUN gyldig JSON, ingen annen tekst, ingen kodeblokk`;
 
-export async function parseMealPlanFromImage(fileBase64: string, mediaType: string): Promise<MealPlanParseResult> {
+const MEAL_PLAN_INGREDIENTS_SYSTEM = `Du er en ekspert på å lese norske oppskrifter fra PDF-dokumenter.
+Finn oppskriften med tittelen som brukeren oppgir og returner ingredienslisten som JSON-array.
+
+Returner KUN et JSON-array:
+[
+  {"name": "laksefilet", "quantity": 500, "unit": "g", "is_staple": false},
+  {"name": "smør", "quantity": 1, "unit": "ss", "is_staple": true}
+]
+
+Regler:
+- Hent KUN ingredienser som faktisk står i dokumentet for denne oppskriften
+- Normaliser ingrediensnavn til norsk, små bokstaver
+- is_staple: true for basisvarer folk flest har hjemme (olje, smør, salt, pepper, sukker, mel, hvitløk, løk, vann, buljong, soyasaus, eddik, tomatpuré, bakepulver, vaniljesukker, melis)
+- is_staple: false for alt annet
+- Konverter tekstmengder til tall ("en halv" → 0.5, "to" → 2, "3 klyper" → 3)
+- Hvis oppskriften ikke finnes i dokumentet, returner tom array []
+- Returner KUN gyldig JSON, ingen annen tekst`;
+
+export async function parseMealPlanFromImage(
+  fileBase64: string,
+  mediaType: string,
+  onProgress?: (msg: string) => void,
+): Promise<MealPlanParseResult> {
   const isPdf = mediaType === 'application/pdf';
   const contentBlock = isPdf
     ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: fileBase64 } }
     : { type: 'image', source: { type: 'base64', media_type: mediaType, data: fileBase64 } };
 
-  const text = await callClaudeAPI({
+  // Steg 1: Hent oppskriftstitler
+  onProgress?.('Leser oppskriftsnavn...');
+  const titlesText = await callClaudeAPI({
     model: CLAUDE_MODEL,
-    max_tokens: 2000,
-    system: MEAL_PLAN_SYSTEM,
+    max_tokens: 1000,
+    system: MEAL_PLAN_TITLES_SYSTEM,
     messages: [{
       role: 'user',
-      content: [
-        contentBlock,
-        { type: 'text', text: 'Trekk ut alle oppskriftene fra denne ukesmenyen. Returner KUN JSON, ingen annen tekst.' },
-      ],
+      content: [contentBlock, { type: 'text', text: 'List opp alle oppskriftene i denne ukesmenyen. Returner KUN JSON.' }],
     }],
   });
-  console.log('[parseMealPlanFromImage] råsvar:', text.slice(0, 500));
-  const extracted = extractJson(text);
-  console.log('[parseMealPlanFromImage] extracted:', extracted.slice(0, 300));
-  return JSON.parse(extracted);
+  console.log('[parseMealPlanFromImage] titler råsvar:', titlesText.slice(0, 500));
+
+  const titlesResult: MealPlanParseResult = JSON.parse(extractJson(titlesText));
+  const recipes = Array.isArray(titlesResult?.recipes) ? titlesResult.recipes : [];
+  if (recipes.length === 0) throw new Error('Fant ingen oppskrifter i filen. Prøv et klarere bilde eller en annen side.');
+
+  // Steg 2: Hent ingredienser per oppskrift i separate kall
+  const recipesWithIngredients: MealPlanRecipe[] = [];
+  for (const recipe of recipes) {
+    onProgress?.(`Henter ingredienser for "${recipe.title}"...`);
+    try {
+      const ingText = await callClaudeAPI({
+        model: CLAUDE_MODEL,
+        max_tokens: 1500,
+        system: MEAL_PLAN_INGREDIENTS_SYSTEM,
+        messages: [{
+          role: 'user',
+          content: [
+            contentBlock,
+            { type: 'text', text: `Finn ingredienslisten for oppskriften "${recipe.title}" i dette dokumentet. Returner KUN JSON-array.` },
+          ],
+        }],
+      });
+      console.log(`[parseMealPlanFromImage] ingredienser for "${recipe.title}":`, ingText.slice(0, 300));
+      const ingredients = JSON.parse(extractJson(ingText));
+      recipesWithIngredients.push({ ...recipe, ingredients: Array.isArray(ingredients) ? ingredients : [] });
+    } catch (e) {
+      console.error(`Kunne ikke hente ingredienser for "${recipe.title}":`, e);
+      recipesWithIngredients.push({ ...recipe, ingredients: [] });
+    }
+  }
+
+  return { recipes: recipesWithIngredients };
 }
 
 // Generate ingredients for a recipe by name (used when meal plan import only has title)

@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { parseMealPlanFromImage, generateRecipeIngredients, type MealPlanRecipe } from '@/lib/claude';
+import { parseMealPlanFromImage, type MealPlanRecipe } from '@/lib/claude';
 
 const C = {
   bg: '#d8fff0', white: '#ffffff', low: '#bffee7', container: '#b2f6de',
@@ -136,6 +136,7 @@ export default function MealPlanScreen() {
   const [mpImageBase64, setMpImageBase64] = useState<string | null>(null);
   const [mpImageMediaType, setMpImageMediaType] = useState('image/jpeg');
   const [mpParsing, setMpParsing] = useState(false);
+  const [mpProgress, setMpProgress] = useState<string | null>(null);
   const [mpError, setMpError] = useState<string | null>(null);
   const [mpParsedRecipes, setMpParsedRecipes] = useState<(MealPlanRecipe & { selected: boolean })[]>([]);
   const [mpSaving, setMpSaving] = useState(false);
@@ -161,8 +162,9 @@ export default function MealPlanScreen() {
 
         // Start parsing automatisk
         setMpParsing(true);
+        setMpProgress('Leser fil...');
         try {
-          const result = await parseMealPlanFromImage(b64, mt);
+          const result = await parseMealPlanFromImage(b64, mt, setMpProgress);
           const recipes = Array.isArray(result?.recipes) ? result.recipes : [];
           if (recipes.length === 0) throw new Error('Fant ingen oppskrifter i filen. Prøv et klarere bilde eller en annen side.');
           setMpParsedRecipes(recipes.map((r) => ({ ...r, selected: true })));
@@ -170,6 +172,7 @@ export default function MealPlanScreen() {
           setMpError(err instanceof Error ? err.message : 'Ukjent feil');
         } finally {
           setMpParsing(false);
+          setMpProgress(null);
         }
       };
       reader.readAsDataURL(file);
@@ -190,8 +193,10 @@ export default function MealPlanScreen() {
         .ilike('name', recipe.title)
         .maybeSingle();
 
+      let recipeId = existingRecipe?.id ?? null;
+
       if (!existingRecipe) {
-        await supabase.from('recipes').insert({
+        const { data: inserted } = await supabase.from('recipes').insert({
           household_id: householdId,
           name: recipe.title,
           base_servings: recipe.servings ?? 4,
@@ -199,7 +204,20 @@ export default function MealPlanScreen() {
           source_label: 'Ukesmeny',
           description: recipe.description ?? null,
           description_is_ai: true,
-        });
+        }).select('id').single();
+        recipeId = inserted?.id ?? null;
+      }
+
+      // Lagre ingredienser fra PDF hvis de finnes og oppskriften er ny
+      if (recipeId && !existingRecipe && recipe.ingredients && recipe.ingredients.length > 0) {
+        const rows = recipe.ingredients.map((ing) => ({
+          recipe_id: recipeId,
+          name: ing.name,
+          quantity: ing.quantity,
+          unit: ing.unit,
+        }));
+        const { error } = await supabase.from('recipe_ingredients').insert(rows);
+        if (error) console.error('Feil ved lagring av ingredienser:', error);
       }
     }
 
@@ -219,6 +237,7 @@ export default function MealPlanScreen() {
     setMpError(null);
     setMpDone(false);
     setMpParsing(false);
+    setMpProgress(null);
   };
 
   const refreshRecipes = useCallback(async () => {
@@ -332,32 +351,7 @@ export default function MealPlanScreen() {
           .select('name, quantity, unit')
           .eq('recipe_id', slot.recipe_id!);
 
-        let ingredients = ings ?? [];
-
-        // Hvis ingen ingredienser finnes, generer dem via Claude og lagre
-        if (ingredients.length === 0) {
-          try {
-            const generated = await generateRecipeIngredients(
-              slot.recipe!.name,
-              slot.recipe!.base_servings || 4,
-              allergens
-            );
-            if (generated.length > 0) {
-              // Lagre i recipe_ingredients (tabellen har ikke is_staple-kolonne)
-              const rows = generated.map((g) => ({
-                recipe_id: slot.recipe_id!,
-                name: g.name,
-                quantity: g.quantity,
-                unit: g.unit,
-              }));
-              const { error } = await supabase.from('recipe_ingredients').insert(rows);
-              if (error) console.error('Feil ved lagring av ingredienser:', error);
-              else ingredients = generated;
-            }
-          } catch (e) {
-            console.error(`Kunne ikke generere ingredienser for ${slot.recipe!.name}:`, e);
-          }
-        }
+        const ingredients = ings ?? [];
 
         for (const ing of ingredients) {
           const scale = slot.servings / (slot.recipe!.base_servings || 4);
@@ -645,7 +639,7 @@ export default function MealPlanScreen() {
                             <View style={{ alignItems: 'center', gap: 14, padding: 28 } as any}>
                               <ActivityIndicator size="large" color={C.primary} />
                               <Text style={{ fontSize: 14, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>
-                                Leser ukesmenyen...
+                                {mpProgress ?? 'Leser ukesmenyen...'}
                               </Text>
                             </View>
                           ) : mpImageUri ? (

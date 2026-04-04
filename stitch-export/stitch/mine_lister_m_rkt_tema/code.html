@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Handleappen - The Fluid Pantry</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#00eea6",
+                    "on-primary-container": "#005c3e",
+                    "on-background": "#d8fff0",
+                    "surface-container-lowest": "#00110c",
+                    "primary-fixed-dim": "#00eea6",
+                    "secondary-fixed": "#5afcd2",
+                    "primary-fixed": "#00feb2",
+                    "surface-container-highest": "#00362a",
+                    "tertiary": "#00dcfd",
+                    "surface-bright": "#002018",
+                    "secondary-dim": "#47edc4",
+                    "inverse-surface": "#d8fff0",
+                    "primary-container": "#006746",
+                    "error": "#ffb4ab",
+                    "on-tertiary-fixed": "#00343c",
+                    "surface": "#001510",
+                    "on-secondary-container": "#c4ffea",
+                    "tertiary-dim": "#00cdeb",
+                    "on-surface-variant": "#a7f1d8",
+                    "on-primary": "#003825",
+                    "tertiary-fixed": "#00dcfd",
+                    "secondary-container": "#00503f",
+                    "background": "#001510",
+                    "on-tertiary": "#00363d",
+                    "on-error": "#690005",
+                    "on-primary-fixed-variant": "#00feb2",
+                    "surface-container": "#00251e",
+                    "surface-container-high": "#002f26",
+                    "inverse-on-surface": "#00362a",
+                    "outline-variant": "#2f6555",
+                    "on-error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#47edc4",
+                    "surface-variant": "#2f6555",
+                    "primary-dim": "#00eea6",
+                    "secondary": "#47edc4",
+                    "on-secondary-fixed-variant": "#00503f",
+                    "tertiary-fixed-dim": "#00cdeb",
+                    "on-tertiary-fixed-variant": "#004d59",
+                    "on-surface": "#d8fff0",
+                    "tertiary-container": "#004d59",
+                    "error-container": "#93000a",
+                    "on-secondary": "#00382b",
+                    "on-primary-fixed": "#002114",
+                    "on-secondary-fixed": "#002118",
+                    "surface-dim": "#001510",
+                    "outline": "#81b8a5",
+                    "surface-tint": "#00eea6",
+                    "error-dim": "#ffb4ab",
+                    "surface-container-low": "#001d16",
+                    "on-tertiary-container": "#00dcfd",
+                    "inverse-primary": "#006947"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full z-40 bg-surface/80 backdrop-blur-xl shadow-[0px_10px_30px_rgba(0,0,0,0.3)]">
+<div class="flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="spa">spa</span>
+<h1 class="text-xl font-bold text-on-surface italic font-headline tracking-tight">The Fluid Pantry</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-surface-variant/20 transition-colors scale-95 active:duration-150">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="search">search</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden ring-1 ring-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="portrait of a woman with a kind expression in soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4HFA-_ZxsFW9ru-9GhrZ-ubKC9vieCe6PcoeP6W0Z1nV0ltTBAgqu_qzRxugtqM4dfOXvWHQTqyrwpAVFFJMOMqZetqmmb9I4hwZ0EfFDEu_U24GhxadM3fDUuaoF_sVQ2MCLPnBgbUqR_AZ0rfkWnZmT56DTDbfFgrW1GjywSLB8UhYE7fjwTyTmdxuXAdUGc5C9vc6s1cvptz66N1KgBvPL9Vlc3vg2eMfALhY8gRlifO0Qu6nK9GhkiqyBDt0z3N07VK5k1Dem"/>
+</div>
+</div>
+</div>
+</header>
+<main class="px-6 py-8 max-w-5xl mx-auto space-y-10">
+<!-- Welcome Section -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+<div class="md:col-span-8">
+<p class="font-label text-primary font-bold uppercase tracking-[0.2em] text-[10px] mb-2 opacity-80">Household Overview</p>
+<h2 class="text-4xl font-headline font-extrabold text-on-surface leading-tight tracking-tighter">
+                    Good morning, <span class="text-primary italic">The Bjørnstads.</span>
+</h2>
+<p class="text-on-surface-variant mt-4 font-body text-lg max-w-md">
+                    Your pantry is synchronized across 4 devices. 2 lists need attention before the weekend.
+                </p>
+</div>
+<div class="md:col-span-4 flex md:justify-end">
+<div class="bg-surface-container p-4 rounded-xl shadow-2xl flex items-center gap-4 ring-1 ring-outline-variant/20">
+<div class="flex -space-x-3">
+<img class="w-10 h-10 rounded-full border-2 border-surface-container object-cover" data-alt="portrait of a man with glasses and a friendly smile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASgBh44_vTS81xQ2E8u3LSNYbqY8v6be83snP1qYD2N_VWTCJbRIjWArIYRlzp_Oxsk5Frr9K1zw8FnoCpt7M2_hobgNqjN5CIP0InC2oDH9zWDvtx2wpKja09UMCXfGlog1hmJA7-Pon0oT6INbQIhCfwdTWAYL9o10KJgGzbMZ7CGZrSG0d3j-qwF5hrnfQ0ujabP71Xc0KsUhGWgY1f8JcJdDPjRMgqrU-HDx1um7MEcpCOdLFWuC6FvFKmkCfHCa9Q3w-E1FlM"/>
+<img class="w-10 h-10 rounded-full border-2 border-surface-container object-cover" data-alt="smiling young woman with braided hair" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDk46_Gy0WZeq8UrzNN6ElGuVypBJqbcuHBPyIHXmNaT3hft1UtEMtGAfS5RiG_nBbg0O9b69K82bMry__MxvQonPqV-hfWuYw7JzxvZONBdT17M79o-FBE_a60aFmUeFhULlfxwgkyUtd03JbeC5PvPSSK2lxnCuNSgf2dBJURBr_l3NClCyxobTne1BdtYCyNJobpEvNm-YQ2z0tA0ncCTX_AVdhdqqpIBP2aBIPEri2eVuJdDBZiAJ5oILNcNK7p9j1bgbBHlaSY"/>
+<img class="w-10 h-10 rounded-full border-2 border-surface-container object-cover" data-alt="close up of a person looking forward thoughtfully" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBn54CQaUjHQORi49xJbXzuY60uFD40gMs3cUBPeZTaS5HMilESvw1fwA1WEvNzh70fRQzX_cqQTyvQW9EOaYQMuF5v6pvct7-i0uizzbGNQN2vrLZ7fFYdXVczyx9AtADBRet3_eK1SDy8CwiKtnHB2BMaDI5d-h4mH1_SNLxDaK-U6-I4NpIRSMnKpGaV608D2scpBTgFMzvdFj-JPz6-0dFCSd035XqzDcN_Nh0wT7B8QreTQMHKUWEMry0CVbj6D2ulL57dbvH5"/>
+<div class="w-10 h-10 rounded-full border-2 border-surface-container bg-secondary-container flex items-center justify-center text-[10px] font-bold text-on-secondary-container">+1</div>
+</div>
+<div>
+<p class="text-xs font-bold font-label uppercase tracking-wider text-on-surface-variant">Members</p>
+<p class="text-sm font-semibold text-primary">Active Now</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Featured Lists -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- List Card: Ukeshandel -->
+<div class="group relative bg-surface-container-high rounded-[1.5rem] p-6 shadow-[0px_20px_40px_rgba(0,0,0,0.3)] hover:bg-surface-container-highest transition-all duration-300 overflow-hidden flex flex-col justify-between min-h-[220px] border border-outline-variant/10">
+<div class="absolute top-0 right-0 p-4">
+<span class="material-symbols-outlined text-primary-dim opacity-40 group-hover:opacity-100 transition-opacity" data-icon="groups">groups</span>
+</div>
+<div>
+<div class="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="shopping_basket">shopping_basket</span>
+</div>
+<h3 class="text-2xl font-headline font-bold text-on-surface">Ukeshandel</h3>
+<p class="text-on-surface-variant font-body mt-1">11 items • Groceries</p>
+</div>
+<div class="mt-8 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-xs font-bold font-label text-primary uppercase tracking-widest">In Progress</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+<!-- List Card: Byggevarer -->
+<div class="group bg-surface-container-low rounded-[1.5rem] p-6 transition-all duration-300 flex flex-col justify-between min-h-[220px] border border-outline-variant/10 hover:bg-surface-container-high">
+<div class="absolute top-0 right-0 p-4">
+<span class="material-symbols-outlined text-on-surface-variant opacity-40" data-icon="person_outline">person_outline</span>
+</div>
+<div>
+<div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-on-surface" data-icon="construction">construction</span>
+</div>
+<h3 class="text-2xl font-headline font-bold text-on-surface">Byggevarer</h3>
+<p class="text-on-surface-variant font-body mt-1">4 items • DIY Project</p>
+</div>
+<div class="mt-8 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold font-label text-on-surface-variant uppercase tracking-widest">Private</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+<!-- List Card: Apotek -->
+<div class="group bg-surface-container-high rounded-[1.5rem] p-6 shadow-[0px_20px_40px_rgba(0,0,0,0.3)] transition-all duration-300 flex flex-col justify-between min-h-[220px] border border-outline-variant/10 hover:bg-surface-container-highest">
+<div class="absolute top-0 right-0 p-4">
+<span class="material-symbols-outlined text-primary-dim opacity-40" data-icon="share">share</span>
+</div>
+<div>
+<div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-on-secondary-container" data-icon="medical_services">medical_services</span>
+</div>
+<h3 class="text-2xl font-headline font-bold text-on-surface">Apotek</h3>
+<p class="text-on-surface-variant font-body mt-1">2 items • Urgent</p>
+</div>
+<div class="mt-8 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold font-label text-error uppercase tracking-widest">High Priority</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</section>
+<!-- Summary & Insights -->
+<section class="bg-surface-container-low rounded-[2rem] p-8 mt-12 relative overflow-hidden border border-outline-variant/10">
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+<div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+<div>
+<h4 class="text-xl font-headline font-bold mb-4 text-on-surface">Household Sync Status</h4>
+<div class="space-y-4">
+<div class="flex items-center gap-4 bg-surface-container-high/60 backdrop-blur-sm p-4 rounded-xl ring-1 ring-outline-variant/10">
+<span class="material-symbols-outlined text-primary" data-icon="cloud_done">cloud_done</span>
+<div>
+<p class="text-sm font-bold text-on-surface">Everything Updated</p>
+<p class="text-xs text-on-surface-variant">Last sync: 2 minutes ago</p>
+</div>
+</div>
+<div class="flex items-center gap-4 bg-surface-container-high/60 backdrop-blur-sm p-4 rounded-xl ring-1 ring-outline-variant/10">
+<span class="material-symbols-outlined text-tertiary" data-icon="notifications_active">notifications_active</span>
+<div>
+<p class="text-sm font-bold text-on-surface">Shared Activity</p>
+<p class="text-xs text-on-surface-variant">Jonas added 'Oat Milk' to Ukeshandel</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-primary-container rounded-2xl p-6 text-on-primary-container flex flex-col justify-between shadow-xl min-h-[160px] bg-gradient-to-br from-primary-container to-secondary-container ring-1 ring-primary-fixed/20">
+<p class="text-sm font-label uppercase tracking-widest opacity-80">Quick Tip</p>
+<p class="text-lg font-headline font-semibold leading-relaxed">
+                        Scanning a receipt can automatically add frequently bought items to your next week's list.
+                    </p>
+<div class="flex justify-end">
+<span class="material-symbols-outlined text-3xl opacity-60" data-icon="lightbulb">lightbulb</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- FAB: New List -->
+<button class="fixed bottom-24 right-6 md:right-12 z-50 bg-gradient-to-br from-primary to-primary-container text-on-primary p-5 rounded-full shadow-[0px_15px_40px_rgba(0,238,166,0.2)] hover:scale-105 active:scale-95 transition-all duration-200 group ring-1 ring-primary/20">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-3xl font-bold" data-icon="add">add</span>
+<span class="font-headline font-bold pr-2 hidden md:block">New List</span>
+</div>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-8 pt-4 bg-surface/90 backdrop-blur-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.4)] rounded-t-[1.5rem] border-t border-outline-variant/20">
+<a class="flex flex-col items-center justify-center bg-secondary-container text-primary-fixed rounded-2xl px-6 py-2 active:scale-90 transition-transform duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="format_list_bulleted">format_list_bulleted</span>
+<span class="font-['Manrope'] text-[11px] font-bold uppercase tracking-wider mt-1">Lists</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 px-6 py-2 hover:text-on-surface active:scale-90 transition-transform duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-['Manrope'] text-[11px] font-bold uppercase tracking-wider mt-1">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 px-6 py-2 hover:text-on-surface active:scale-90 transition-transform duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+<span class="font-['Manrope'] text-[11px] font-bold uppercase tracking-wider mt-1">Statistics</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 px-6 py-2 hover:text-on-surface active:scale-90 transition-transform duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Manrope'] text-[11px] font-bold uppercase tracking-wider mt-1">Settings</span>
+</a>
+</nav>
+</body></html>
