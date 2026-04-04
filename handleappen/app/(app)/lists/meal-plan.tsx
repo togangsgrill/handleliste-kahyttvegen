@@ -56,12 +56,13 @@ function normalizeName(n: string) {
   return n.toLowerCase().trim();
 }
 
-// Basisvarer de fleste har hjemme — brukes til opt-out
+// Basisvarer de fleste har hjemme — skal matche IS_STAPLE_RULE i claude.ts
 const STAPLE_KEYWORDS = [
   'olje', 'olivenolje', 'rapsolje', 'nøytral olje', 'smør', 'salt', 'pepper',
   'sukker', 'mel', 'hvitløk', 'løk', 'vann', 'buljong', 'kraft',
   'soyasaus', 'eddik', 'balsamico', 'tomatpuré', 'bakepulver', 'vaniljesukker',
-  'kanel', 'muskat', 'paprika', 'oregano', 'timian', 'laurbærblad',
+  'melis', 'kanel', 'muskat', 'paprikapulver', 'oregano', 'timian', 'laurbærblad',
+  'spisskummen', 'gurkemeie', 'garam masala',
 ];
 function isStaple(name: string): boolean {
   const n = name.toLowerCase().trim();

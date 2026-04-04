@@ -88,6 +88,8 @@ export interface RecipeParseResult {
   }[];
 }
 
+const IS_STAPLE_RULE = `"is_staple": sett true for basisvarer de fleste norske husholdninger har hjemme og sjelden trenger å kjøpe spesielt. Eksempler som SKAL være true: olje (olivenolje, nøytral olje, rapsolje), smør, salt, pepper, sukker, mel, bakepulver, vaniljesukker, melis, eddik (alle typer), soyasaus, flytende kjøttfond, grønnsaksbuljong, kyllingkraft, fiskekraft, tomatpuré, hvitløk, løk, vann, spisskummen, gurkemeie, paprikapulver, garam masala, kanel, muskat, oregano, timian, laurbærblad. Sett false for alt annet — spesifikke kjøttstykker, fersk fisk, grønnsaker utover løk/hvitløk, meieriprodukter, pasta, ris, hermetikk, nøtter, frø, sitrus, ferske urter.`;
+
 function buildRecipeSystemPrompt(allergens: string[] = []): string {
   const allergenSection = allergens.length > 0
     ? `\n\nHUSHOLDNINGENS ALLERGIER/INTOLERANSER: ${allergens.join(', ')}
@@ -120,7 +122,7 @@ Regler:
 - source_confidence: hvor sikker du er på kildeinfo (0–1)
 - description: lag en kort, naturlig beskrivelse basert på ingredienser og navn — IKKE kopier tekst fra originalen
 - Alltid inkluder "allergens" (tom array []) og "substitute" (null) på alle ingredienser
-- "is_staple": sett true for basisvarer de fleste norske husholdninger har hjemme og sjelden trenger å kjøpe spesielt. Eksempler som SKAL være true: olje (olivenolje, nøytral olje, rapsolje), smør, salt, pepper, sukker, mel, bakepulver, vaniljesukker, eddik (alle typer), soyasaus, flytende kjøttfond, grønnsaksbuljong, kyllingkraft, fiskekraft, tomatpuré, hvitløk, løk, vann. Sett false for alt annet — spesifikke kjøttstykker, fersk fisk, grønnsaker utover løk/hvitløk, meieriprodukter, pasta, ris, hermetikk, krydderblandinger man ikke alltid har.
+- ${IS_STAPLE_RULE}
 - Returner KUN gyldig JSON, ingen annen tekst${allergenSection}`;
 }
 
@@ -192,8 +194,7 @@ Returner KUN et JSON-array:
 Regler:
 - Hent KUN ingredienser som faktisk står i dokumentet for denne oppskriften
 - Normaliser ingrediensnavn til norsk, små bokstaver
-- is_staple: true for basisvarer folk flest har hjemme (olje, smør, salt, pepper, sukker, mel, hvitløk, løk, vann, buljong, soyasaus, eddik, tomatpuré, bakepulver, vaniljesukker, melis)
-- is_staple: false for alt annet
+- ${IS_STAPLE_RULE}
 - Konverter tekstmengder til tall ("en halv" → 0.5, "to" → 2, "3 klyper" → 3)
 - Hvis oppskriften ikke finnes i dokumentet, returner tom array []
 - Returner KUN gyldig JSON, ingen annen tekst`;
