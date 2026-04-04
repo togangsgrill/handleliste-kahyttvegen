@@ -191,7 +191,7 @@ export default function SettingsScreen() {
         {/* Title + change button */}
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 } as any}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: C.textSec, marginBottom: 8, textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Husholdning</Text>
+            <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: C.textSec, marginBottom: 8, textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Innstillinger</Text>
             <Text style={{ fontSize: 32, fontWeight: '800', color: C.text, letterSpacing: -1, fontFamily: C.font } as any}>{householdName || 'Laster...'}</Text>
           </View>
           <TouchableOpacity

@@ -248,6 +248,7 @@ export default function ListsScreen() {
 
         {/* Hilsen */}
         <View style={{ marginBottom: 32 }}>
+          <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: C.textSec, marginBottom: 8, textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Lister</Text>
           <Text style={{ fontSize: 32, fontWeight: '800', color: C.text, letterSpacing: -1, fontFamily: C.font } as any}>
             {greeting} 👋
           </Text>
