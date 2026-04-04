@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>%WEB_TITLE%</title>
     <!-- PWA / installable app -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,6 +17,7 @@
       html,
       body {
         height: 100%;
+        height: 100dvh;
       }
       body {
         overflow: hidden;
@@ -24,7 +25,13 @@
       #root {
         display: flex;
         height: 100%;
+        height: 100dvh;
         flex: 1;
+      }
+      /* Fix tab bar in iOS PWA standalone mode */
+      [data-testid="tab-bar"],
+      .r-1xcajam[style*="bottom"] {
+        bottom: env(safe-area-inset-bottom, 0px) !important;
       }
     </style>
   </head>

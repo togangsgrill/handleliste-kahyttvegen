@@ -15,16 +15,26 @@ let html = fs.readFileSync(file, 'utf8');
 
 // 1. Patch viewport
 const before = 'width=device-width, initial-scale=1, shrink-to-fit=no"';
-const after  = 'width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"';
+const after  = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"';
 if (!html.includes(after)) {
   if (!html.includes(before)) {
     console.error('Could not find viewport meta to patch.');
     process.exit(1);
   }
   html = html.replace(before, after);
-  console.log('Patched viewport-fit=cover');
+  console.log('Patched viewport with maximum-scale=1 and viewport-fit=cover');
 } else {
-  console.log('viewport-fit=cover already present, skipping.');
+  console.log('Viewport already patched, skipping.');
+}
+
+// 1b. Fix height: use 100dvh for proper PWA standalone viewport on iOS
+const heightFix = `
+    <style id="pwa-height-fix">
+      html, body, #root { height: 100dvh !important; }
+    </style>`;
+if (!html.includes('pwa-height-fix')) {
+  html = html.replace('</head>', heightFix + '\n  </head>');
+  console.log('Injected 100dvh height fix');
 }
 
 // 2. Inject PWA meta tags if not already present
