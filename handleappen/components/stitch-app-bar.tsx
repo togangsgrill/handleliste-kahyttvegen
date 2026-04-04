@@ -107,7 +107,7 @@ export function StitchAppBar({ onBack, title, showSearch, showNotifications }: S
     return (
       <>
         {/* Spacer: 72px content + safe area top via CSS */}
-        <View style={{ height: 72, marginTop: 'env(safe-area-inset-top, 0px)' } as any} />
+        <View style={{ height: 'calc(72px + env(safe-area-inset-top, 0px))' } as any} />
         <View
           style={{
             paddingTop: 'env(safe-area-inset-top, 0px)',
