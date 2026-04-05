@@ -3,6 +3,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, Platform } from 'react-native';
+import type { Session } from '@supabase/supabase-js';
 import 'react-native-reanimated';
 import '../global.css';
 
@@ -62,52 +63,50 @@ export default function RootLayout() {
   const setLoading = useAuthStore((s) => s.setLoading);
 
   useEffect(() => {
-    async function init() {
-      try {
-        // Check for existing session (no auto-anonymous anymore)
-        const { data: { session } } = await supabase.auth.getSession();
+    let cancelled = false;
 
-        if (session && !session.user.is_anonymous) {
-          setSession(session);
-
-          const { data: user } = await supabase
-            .from('users')
-            .select('household_id')
-            .eq('id', session.user.id)
-            .single();
-
-          setHouseholdId(user?.household_id ?? null);
-        } else {
-          // No session or anonymous — user needs to log in
-          setSession(null);
-          setHouseholdId(null);
-        }
-      } catch (e) {
-        console.error('Auth init error:', e);
-      } finally {
-        setLoading(false);
-        setReady(true);
-      }
-    }
-    init();
-
-    // Listen for auth state changes (login, logout, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Felles logikk: hent household_id for en bruker og oppdater store.
+    // Setter ALLTID både session og household før loading=false, slik at
+    // ListsScreen aldri mounter med session men uten household.
+    async function applySession(session: Session | null) {
       if (session && !session.user.is_anonymous) {
-        setSession(session);
         const { data: user } = await supabase
           .from('users')
           .select('household_id')
           .eq('id', session.user.id)
           .single();
+        if (cancelled) return;
+        setSession(session);
         setHouseholdId(user?.household_id ?? null);
-      } else if (event === 'SIGNED_OUT') {
+      } else {
+        if (cancelled) return;
         setSession(null);
         setHouseholdId(null);
       }
+    }
+
+    async function init() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        await applySession(session);
+      } catch (e) {
+        console.error('Auth init error:', e);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          setReady(true);
+        }
+      }
+    }
+    init();
+
+    // Lytt på påfølgende endringer. Hopp over INITIAL_SESSION siden init() allerede håndterer den.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+      applySession(session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => { cancelled = true; subscription.unsubscribe(); };
   }, [setSession, setHouseholdId, setLoading]);
 
   if (!ready) {

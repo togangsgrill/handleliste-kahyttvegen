@@ -12,7 +12,10 @@ export function useShoppingLists() {
   const householdId = useAuthStore((s) => s.householdId);
 
   const fetchLists = useCallback(async () => {
-    if (!householdId) return;
+    if (!householdId) {
+      // Ingen household ennå — behold loading-state til den kommer
+      return;
+    }
 
     const { data, error: fetchError } = await supabase
       .from('shopping_lists')
@@ -30,8 +33,11 @@ export function useShoppingLists() {
   }, [householdId]);
 
   useEffect(() => {
-    fetchLists();
-  }, [fetchLists]);
+    if (householdId) {
+      setIsLoading(true);
+      fetchLists();
+    }
+  }, [householdId, fetchLists]);
 
   // Realtime subscription
   useEffect(() => {

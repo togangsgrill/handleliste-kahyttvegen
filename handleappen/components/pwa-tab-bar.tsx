@@ -9,7 +9,7 @@ const C = {
 };
 
 const ICONS: Record<string, { name: any; label: string }> = {
-  lists:      { name: 'list.bullet',    label: 'LISTER' },
+  lists:      { name: 'house.fill',     label: 'HJEM' },
   history:    { name: 'clock.fill',     label: 'HISTORIKK' },
   statistics: { name: 'chart.bar.fill', label: 'STATISTIKK' },
   settings:   { name: 'gearshape.fill', label: 'INNSTILLINGER' },
@@ -48,7 +48,17 @@ export function PWATabBar({ state, navigation }: BottomTabBarProps) {
           <TouchableOpacity
             key={route.key}
             onPress={() => {
-              if (!isFocused) navigation.navigate(route.name);
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name as never);
+              } else if (isFocused) {
+                // Allerede på tabben — pop stacken tilbake til rot-skjermen
+                navigation.navigate(route.name as never, { screen: 'index' } as never);
+              }
             }}
             style={{ flex: 1, alignItems: 'center' as const, justifyContent: 'center' as const, gap: 2 }}
             activeOpacity={0.7}

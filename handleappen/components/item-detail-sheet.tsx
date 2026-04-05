@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { StorePrice } from '@/hooks/usePriceHistory';
 import type { Database } from '@/types/database';
+import type { KassalAllergen } from '@/lib/kassal';
 
 type ListItem = Database['public']['Tables']['list_items']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
@@ -56,6 +57,10 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
   const [stats, setStats] = useState<PurchaseStat | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
 
+  // Allergens
+  const [allergens, setAllergens] = useState<KassalAllergen[]>([]);
+  const [householdAllergens, setHouseholdAllergens] = useState<string[]>([]);
+
   useEffect(() => {
     if (!item) return;
     setName(item.name);
@@ -63,8 +68,18 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
     setNote(item.note ?? '');
     setCategoryId(item.category_id);
     setStats(null);
+    setAllergens([]);
     loadStats(item.name);
+    loadAllergens(item);
   }, [item?.id]);
+
+  // Load household allergen profile
+  useEffect(() => {
+    if (!householdId) return;
+    supabase.from('households').select('allergens').eq('id', householdId).single().then(({ data }) => {
+      setHouseholdAllergens(data?.allergens ?? []);
+    });
+  }, [householdId]);
 
   const loadStats = async (itemName: string) => {
     if (!householdId) return;
@@ -87,6 +102,48 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
     }
     setLoadingStats(false);
   };
+
+  const loadAllergens = async (li: ListItem) => {
+    const ean = (li as any).barcode;
+    if (!ean) return;
+    const { data } = await supabase
+      .from('kassal_products')
+      .select('allergens')
+      .eq('ean', ean)
+      .single();
+    if (data?.allergens) {
+      setAllergens(data.allergens as KassalAllergen[]);
+    }
+  };
+
+  // Map Kassal allergen codes to household allergen keys
+  const allergenCodeMap: Record<string, string> = {
+    gluten: 'gluten', wheat: 'gluten', barley: 'gluten', rye: 'gluten', oats: 'gluten',
+    milk: 'laktose', lactose: 'laktose',
+    egg: 'egg', eggs: 'egg',
+    peanuts: 'peanøtter', peanut: 'peanøtter',
+    nuts: 'trenøtter', tree_nuts: 'trenøtter', almonds: 'trenøtter', hazelnuts: 'trenøtter', walnuts: 'trenøtter', cashews: 'trenøtter',
+    fish: 'fisk',
+    crustaceans: 'skalldyr', shellfish: 'skalldyr', molluscs: 'skalldyr',
+    soy: 'soya', soybeans: 'soya',
+    celery: 'selleri',
+    mustard: 'sennep',
+    sesame: 'sesamfrø', sesame_seeds: 'sesamfrø',
+    sulphites: 'svoveldioksid', sulphur_dioxide: 'svoveldioksid',
+    lupin: 'lupin', lupine: 'lupin',
+  };
+
+  const isHouseholdAllergen = (a: KassalAllergen): boolean => {
+    const code = a.code?.toLowerCase() ?? '';
+    const mapped = allergenCodeMap[code];
+    if (mapped && householdAllergens.includes(mapped)) return true;
+    // Also try matching display_name against household allergen keys
+    const dn = a.display_name?.toLowerCase() ?? '';
+    return householdAllergens.some((ha) => dn.includes(ha));
+  };
+
+  const presentAllergens = allergens.filter((a) => a.contains === 'YES');
+  const traceAllergens = allergens.filter((a) => a.contains === 'CAN_CONTAIN_TRACES');
 
   const handleSave = async () => {
     if (!item) return;
@@ -213,6 +270,63 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
                     </View>
                   );
                 })}
+              </View>
+            )}
+
+            {/* Allergener */}
+            {(presentAllergens.length > 0 || traceAllergens.length > 0) && (
+              <View style={{ backgroundColor: C.container, borderRadius: 16, padding: 14, marginBottom: 20 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 10 } as any}>
+                  Allergener
+                </Text>
+                {presentAllergens.length > 0 && (
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: traceAllergens.length > 0 ? 10 : 0 } as any}>
+                    {presentAllergens.map((a) => {
+                      const warn = isHouseholdAllergen(a);
+                      return (
+                        <View
+                          key={a.code}
+                          style={{
+                            flexDirection: 'row', alignItems: 'center', gap: 4,
+                            paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999,
+                            backgroundColor: warn ? 'rgba(201,123,0,0.15)' : C.low,
+                            borderWidth: warn ? 1 : 0, borderColor: '#c97b00',
+                          } as any}
+                        >
+                          {warn && <MaterialIcons name="warning-amber" size={13} color="#c97b00" />}
+                          <Text style={{ fontSize: 12, fontWeight: warn ? '700' : '500', color: warn ? '#c97b00' : C.text, fontFamily: C.fontBody } as any}>
+                            {a.display_name}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+                {traceAllergens.length > 0 && (
+                  <View>
+                    <Text style={{ fontSize: 11, color: C.outline, fontFamily: C.fontBody, marginBottom: 6 } as any}>
+                      Kan inneholde spor av:
+                    </Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 } as any}>
+                      {traceAllergens.map((a) => {
+                        const warn = isHouseholdAllergen(a);
+                        return (
+                          <View
+                            key={a.code}
+                            style={{
+                              paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999,
+                              backgroundColor: warn ? 'rgba(201,123,0,0.08)' : C.low,
+                            } as any}
+                          >
+                            <Text style={{ fontSize: 11, color: warn ? '#c97b00' : C.outline, fontFamily: C.fontBody, fontWeight: warn ? '600' : '400' } as any}>
+                              {a.display_name}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
               </View>
             )}
 
