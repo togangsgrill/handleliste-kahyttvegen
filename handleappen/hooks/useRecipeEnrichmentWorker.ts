@@ -20,6 +20,9 @@ import { parseMealPlanIngredients } from '@/lib/claude';
  *  6. Ved success: slett enrichment_job hvis ingen andre recipes refererer til den
  *  7. Gå til 2 til ingen flere pending
  *
+ * Toast-varsler vises via realtime-listener (ikke inline i processOne), slik at
+ * ALLE åpne faner får toast selv om prosesseringen skjedde i en annen fane.
+ *
  * Kun én worker-instans per app-mount (ref-guard). To faner vil kunne claime
  * hver sin oppskrift parallelt — det er OK og ønsket.
  */
@@ -27,42 +30,26 @@ export function useRecipeEnrichmentWorker() {
   const householdId = useAuthStore((s) => s.householdId);
   const runningRef = useRef(false);
   const stoppedRef = useRef(false);
+  const seenDoneRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    console.log('[enrichment-worker] mount, householdId=', householdId);
     if (!householdId) return;
     stoppedRef.current = false;
 
     const run = async () => {
-      if (runningRef.current) {
-        console.log('[enrichment-worker] allerede kjørende, hopper over');
-        return;
-      }
+      if (runningRef.current) return;
       runningRef.current = true;
-      console.log('[enrichment-worker] starter kjøring for household', householdId);
 
       try {
         // Crash recovery: frigjør oppskrifter som har vært 'loading' i mer enn 5 min
-        const resetResult = await supabase.rpc('reset_stale_enrichments', { p_household_id: householdId });
-        console.log('[enrichment-worker] reset_stale_enrichments:', resetResult);
+        await supabase.rpc('reset_stale_enrichments', { p_household_id: householdId });
 
-        let iter = 0;
         while (!stoppedRef.current) {
-          iter++;
-          console.log(`[enrichment-worker] iter ${iter}: kaller claim_next_enrichment`);
           const { data, error } = await supabase.rpc('claim_next_enrichment', {
             p_household_id: householdId,
           });
 
-          if (error) {
-            console.error('[enrichment-worker] claim_next_enrichment feil:', error);
-            break;
-          }
-          console.log(`[enrichment-worker] iter ${iter}: data=`, data ? `array(${(data as any[])?.length ?? 0})` : data);
-          if (!data || (data as any[]).length === 0) {
-            console.log('[enrichment-worker] ingen flere pending, stopper');
-            break;
-          }
+          if (error || !data || (data as any[]).length === 0) break;
 
           const job = (data as any[])[0] as {
             recipe_id: string;
@@ -71,7 +58,6 @@ export function useRecipeEnrichmentWorker() {
             file_base64: string;
             media_type: string;
           };
-          console.log(`[enrichment-worker] behandler "${job.recipe_name}" (${job.recipe_id})`);
 
           await processOne(job);
 
@@ -82,15 +68,16 @@ export function useRecipeEnrichmentWorker() {
         console.error('[enrichment-worker] uventet feil:', e);
       } finally {
         runningRef.current = false;
-        console.log('[enrichment-worker] kjøring ferdig');
       }
     };
 
     // Start med en gang ved mount
     run();
 
-    // Realtime: trigger ny kjøring når en oppskrift markeres pending
-    // (f.eks. rett etter import — worker skal plukke opp umiddelbart)
+    // Realtime: lytt på recipes for denne husholdningen.
+    //  - 'pending' → trigger ny kjøring (worker plukker opp nye jobber)
+    //  - 'done'    → vis toast "X ingredienser klare" (cross-tab broadcast)
+    //  - 'failed'  → vis feil-toast
     const channelName = `enrichment-worker:${householdId}:${Math.random().toString(36).slice(2, 10)}`;
     const channel = supabase
       .channel(channelName)
@@ -103,9 +90,32 @@ export function useRecipeEnrichmentWorker() {
           filter: `household_id=eq.${householdId}`,
         },
         (payload) => {
-          const newStatus = (payload.new as any)?.enrichment_status;
-          if (newStatus === 'pending') run();
-        }
+          const row = payload.new as any;
+          const newStatus = row?.enrichment_status;
+          const oldStatus = (payload.old as any)?.enrichment_status;
+
+          if (newStatus === 'pending') {
+            run();
+            return;
+          }
+
+          // Ignorer hvis status ikke faktisk endret seg til done/failed,
+          // eller vi har allerede vist toast for denne recipe_id
+          if (newStatus === oldStatus) return;
+          if (!row?.id) return;
+          if (seenDoneRef.current.has(row.id)) return;
+
+          if (newStatus === 'done') {
+            seenDoneRef.current.add(row.id);
+            showDoneToast(row.id, row.name);
+          } else if (newStatus === 'failed') {
+            seenDoneRef.current.add(row.id);
+            useUIStore.getState().showToast(
+              `${row.name} — kunne ikke hente ingredienser`,
+              '❌',
+            );
+          }
+        },
       )
       .on(
         'postgres_changes',
@@ -118,7 +128,7 @@ export function useRecipeEnrichmentWorker() {
         (payload) => {
           const newStatus = (payload.new as any)?.enrichment_status;
           if (newStatus === 'pending') run();
-        }
+        },
       )
       .subscribe();
 
@@ -129,6 +139,20 @@ export function useRecipeEnrichmentWorker() {
   }, [householdId]);
 }
 
+async function showDoneToast(recipeId: string, recipeName: string) {
+  const { count } = await supabase
+    .from('recipe_ingredients')
+    .select('id', { count: 'exact', head: true })
+    .eq('recipe_id', recipeId);
+
+  const showToast = useUIStore.getState().showToast;
+  if (count && count > 0) {
+    showToast(`${recipeName} — ${count} ingredienser klare`, '🛒');
+  } else {
+    showToast(`${recipeName} — ingen ingredienser funnet`, '⚠️');
+  }
+}
+
 async function processOne(job: {
   recipe_id: string;
   recipe_name: string;
@@ -136,8 +160,6 @@ async function processOne(job: {
   file_base64: string;
   media_type: string;
 }) {
-  const showToast = useUIStore.getState().showToast;
-
   const attempt = async () => {
     return await parseMealPlanIngredients(job.file_base64, job.media_type, job.recipe_name);
   };
@@ -167,12 +189,7 @@ async function processOne(job: {
     const updates: any = { enrichment_status: 'done', enrichment_error: null };
     if (detail.instructions) updates.instructions = detail.instructions;
     await supabase.from('recipes').update(updates).eq('id', job.recipe_id);
-
-    if (detail.ingredients.length > 0) {
-      showToast(`${job.recipe_name} — ${detail.ingredients.length} ingredienser klare`, '🛒');
-    } else {
-      showToast(`${job.recipe_name} — ingen ingredienser funnet`, '⚠️');
-    }
+    // Toast trigges av realtime-listener (cross-tab), ikke her.
 
     // Rydd opp: slett enrichment_job hvis ingen andre recipes peker på den
     const { count } = await supabase
@@ -190,6 +207,6 @@ async function processOne(job: {
       .from('recipes')
       .update({ enrichment_status: 'failed', enrichment_error: msg })
       .eq('id', job.recipe_id);
-    showToast(`${job.recipe_name} — kunne ikke hente ingredienser`, '❌');
+    // Toast trigges av realtime-listener.
   }
 }
