@@ -67,6 +67,7 @@ export default function ListDetailScreen() {
 
   const [selectedStore, setSelectedStore] = useState<StoreWithDistance | null>(null);
   const [userHasPickedStore, setUserHasPickedStore] = useState(false);
+  const [listDefaultStoreId, setListDefaultStoreId] = useState<string | null>(null);
   const { favoriteStoreId } = useFavoriteStore();
 
   // Forhåndsvelg butikk: først listen sin egen default, deretter husholdningens favoritt
@@ -143,8 +144,6 @@ export default function ListDetailScreen() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [listName, setListName] = useState('');
   const householdId = useAuthStore((s) => s.householdId);
-
-  const [listDefaultStoreId, setListDefaultStoreId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
