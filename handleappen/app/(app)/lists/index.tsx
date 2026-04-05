@@ -1,5 +1,6 @@
 import { useState, useEffect, memo } from 'react';
-import { Text, TouchableOpacity, View, TextInput, Modal, ScrollView, Platform } from 'react-native';
+import { Text, TouchableOpacity, View, TextInput, Modal, ScrollView, Platform, Pressable } from 'react-native';
+import { shadows } from '@/lib/shadows';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -67,7 +68,7 @@ const ListCard = memo(function ListCard({ item, itemCount, onDelete }: {
         backgroundColor: C.white,
         borderRadius: 14, padding: 12,
         flexDirection: 'row', alignItems: 'center', gap: 12,
-      }, isWeb ? ({ boxShadow: '0px 2px 10px rgba(0,54,42,0.06)' } as any) : {}]}
+      }, shadows.cardLight]}
       onPress={() => router.push(`/(app)/lists/${item.id}`)}
       activeOpacity={0.85}
     >
@@ -298,7 +299,7 @@ export default function ListsScreen() {
             activeOpacity={0.85}
             style={[{
               borderRadius: 18, marginBottom: 14, overflow: 'hidden',
-            }, isWeb ? ({ boxShadow: '0px 8px 24px rgba(0,54,42,0.10)' } as any) : {}]}
+            }, shadows.cardElevated]}
           >
             {/* Bakgrunn */}
             <View style={{
@@ -418,33 +419,33 @@ export default function ListsScreen() {
       </ScrollView>
 
       {/* Mini-FAB — importer oppskrift */}
-      <TouchableOpacity
-        style={[{
+      <Pressable
+        style={({ pressed }) => [{
           position: 'absolute', bottom: 78 + insets.bottom + 60, right: 18, zIndex: 50,
           width: 40, height: 40, borderRadius: 20,
           backgroundColor: C.white,
           alignItems: 'center', justifyContent: 'center',
           borderWidth: 1.5, borderColor: C.outline + '55',
-        }, isWeb ? ({ boxShadow: '0px 4px 16px rgba(0,54,42,0.12)' } as any) : {}]}
+          transform: [{ scale: pressed ? 0.92 : 1 }],
+        }, isWeb ? ({ boxShadow: '0px 4px 16px rgba(0,54,42,0.12)', transition: 'transform 0.1s' } as any) : {}]}
         onPress={() => router.push('/(app)/lists/import')}
-        activeOpacity={0.8}
       >
         <MaterialIcons name="restaurant-menu" size={18} color={C.primary} />
-      </TouchableOpacity>
+      </Pressable>
 
       {/* FAB — ny liste */}
-      <TouchableOpacity
-        style={{
+      <Pressable
+        style={({ pressed }) => ({
           position: 'absolute', bottom: 78 + insets.bottom, right: 18, zIndex: 50,
           paddingVertical: 16, paddingHorizontal: 16, borderRadius: 9999,
           backgroundColor: C.primary,
-          ...(isWeb ? { background: 'linear-gradient(135deg, #006947, #00feb2)', boxShadow: '0px 20px 50px rgba(0,105,71,0.3)' } as any : {}),
-        } as any}
+          transform: [{ scale: pressed ? 0.94 : 1 }],
+          ...(isWeb ? { background: 'linear-gradient(135deg, #006947, #00feb2)', boxShadow: '0px 20px 50px rgba(0,105,71,0.3)', transition: 'transform 0.1s' } as any : {}),
+        } as any)}
         onPress={() => setShowModal(true)}
-        activeOpacity={0.8}
       >
-        <MaterialIcons name="add" size={26} color="#ffffff" />
-      </TouchableOpacity>
+        <MaterialIcons name="add" size={24} color="#ffffff" />
+      </Pressable>
 
       {/* Slett liste-dialog */}
       <Modal visible={!!deleteConfirmList} transparent animationType="fade">

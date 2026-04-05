@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Text, TextInput, TouchableOpacity, View, Modal, ScrollView,
-  Platform, ActivityIndicator, Image,
+  Platform, ActivityIndicator, Image, Pressable,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { supabase } from '@/lib/supabase';
@@ -414,17 +414,19 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
               >
                 <Text style={{ color: C.primary, fontSize: 16, fontWeight: '600', fontFamily: C.fontBody } as any}>Avbryt</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[{
+              <Pressable
+                style={({ pressed }) => [{
                   flex: 2, paddingVertical: 16, alignItems: 'center', borderRadius: 14,
                   backgroundColor: saving ? C.outline : C.primary, flexDirection: 'row', justifyContent: 'center', gap: 8,
+                  transform: [{ scale: pressed && !saving ? 0.96 : 1 }],
+                  ...(isWeb ? { transition: 'transform 0.1s' } : {}),
                 } as any]}
                 onPress={handleSave}
                 disabled={saving}
               >
                 {saving && <ActivityIndicator size="small" color={C.white} />}
                 <Text style={{ color: C.white, fontSize: 16, fontWeight: '600', fontFamily: C.fontBody } as any}>Lagre</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             {/* Slett */}

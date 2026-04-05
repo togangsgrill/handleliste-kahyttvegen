@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Text, TextInput, TouchableOpacity, View, Modal, ScrollView, Platform } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View, Modal, ScrollView, Platform, Pressable } from 'react-native';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -188,16 +188,15 @@ export default function ListDetailScreen() {
                   returnKeyType="done"
                 />
               </View>
-              <TouchableOpacity
-                style={[
-                  { width: 44, height: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: C.primary },
-                  Platform.OS === 'web' ? ({ boxShadow: '0px 4px 16px rgba(0,105,71,0.35)' } as any) : undefined,
+              <Pressable
+                style={({ pressed }) => [
+                  { width: 44, height: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: C.primary, transform: [{ scale: pressed ? 0.94 : 1 }] },
+                  Platform.OS === 'web' ? ({ boxShadow: '0px 4px 16px rgba(0,105,71,0.35)', transition: 'transform 0.1s' } as any) : undefined,
                 ]}
                 onPress={() => handleAdd()}
-                activeOpacity={0.8}
               >
                 <MaterialIcons name="add" size={22} color={C.white} />
-              </TouchableOpacity>
+              </Pressable>
               {Platform.OS === 'web' && (
                 <>
                   <TouchableOpacity

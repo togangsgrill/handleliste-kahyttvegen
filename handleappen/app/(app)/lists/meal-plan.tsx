@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Text, TouchableOpacity, View, ScrollView, Modal, Platform,
-  ActivityIndicator, Image,
+  ActivityIndicator, Image, Pressable,
 } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -493,19 +493,19 @@ export default function MealPlanScreen() {
             bottom: 78 + insets.bottom,
             zIndex: 50,
           } as any}>
-            <TouchableOpacity
+            <Pressable
               onPress={prepareImport}
-              activeOpacity={0.85}
-              style={[{
+              style={({ pressed }) => [{
                 paddingVertical: 14, borderRadius: 14,
                 alignItems: 'center', justifyContent: 'center',
                 backgroundColor: C.primary,
-              }, isWeb ? ({ boxShadow: '0px 8px 24px rgba(0,105,71,0.35)' } as any) : {}]}
+                transform: [{ scale: pressed ? 0.96 : 1 }],
+              }, isWeb ? ({ boxShadow: '0px 8px 24px rgba(0,105,71,0.35)', transition: 'transform 0.1s' } as any) : {}]}
             >
               <Text style={{ fontSize: 15, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>
                 Legg {filledDays} dager i liste
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         )}
 

@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { Database } from '@/types/database';
@@ -111,6 +113,16 @@ export function useListItems(listId: string | undefined) {
     if (!userId) return;
 
     const newChecked = !item.is_checked;
+
+    // Lett haptisk tilbakemelding ved avhuking
+    if (Platform.OS === 'web') {
+      // Web Vibration API fungerer på Android-PWA, iOS Safari ignorerer det
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        (navigator as any).vibrate?.(newChecked ? 15 : 8);
+      }
+    } else {
+      Haptics.impactAsync(newChecked ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Soft).catch(() => {});
+    }
 
     const { error } = await supabase
       .from('list_items')
