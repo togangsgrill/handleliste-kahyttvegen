@@ -1,12 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useUIStore } from '@/stores/useUIStore';
 import {
   parseRecipeFromImage,
   parseRecipe,
   parseMealPlanTitles,
-  parseMealPlanIngredients,
   type RecipeParseResult,
 } from '@/lib/claude';
 
@@ -263,8 +261,30 @@ export function useRecipeImport() {
     const selected = recipes.filter((r) => r.selected);
     const isPdfImport = inputMode === 'pdf';
     let totalIngredients = 0;
-    const savedForBackground: { id: string; title: string }[] = [];
     let savedIdx = 0;
+
+    // For PDF-import: opprett én enrichment_job-rad opp-front som alle
+    // pending recipes kan peke på. Base64-en lagres bare én gang i DB,
+    // og workeren plukker opp oppskrifter i bakgrunnen selv om brukeren
+    // navigerer bort umiddelbart.
+    let enrichmentJobId: string | null = null;
+    if (isPdfImport && imageBase64) {
+      const { data: jobRow, error: jobErr } = await supabase
+        .from('enrichment_jobs')
+        .insert({
+          household_id: householdId,
+          file_base64: imageBase64,
+          media_type: imageMediaType,
+        })
+        .select('id')
+        .single();
+      if (jobErr) {
+        setError(`Kunne ikke opprette berikelse-jobb: ${jobErr.message}`);
+        setSaving(false);
+        return;
+      }
+      enrichmentJobId = jobRow?.id ?? null;
+    }
 
     try {
       for (const recipe of selected) {
@@ -280,7 +300,7 @@ export function useRecipeImport() {
         let recipeId = existing?.id ?? null;
 
         if (!existing) {
-          const { data: inserted, error: insertErr } = await supabase.from('recipes').insert({
+          const insertPayload: any = {
             household_id: householdId,
             name: recipe.title,
             base_servings: recipe.baseServings,
@@ -291,15 +311,21 @@ export function useRecipeImport() {
             description: recipe.description,
             description_is_ai: true,
             instructions: recipe.instructions,
-          }).select('id').single();
+          };
+          // PDF-import: marker pending så worker plukker opp
+          if (isPdfImport && enrichmentJobId) {
+            insertPayload.enrichment_status = 'pending';
+            insertPayload.enrichment_job_id = enrichmentJobId;
+          }
+
+          const { data: inserted, error: insertErr } = await supabase
+            .from('recipes')
+            .insert(insertPayload)
+            .select('id')
+            .single();
 
           if (insertErr) throw new Error(`Kunne ikke lagre ${recipe.title}: ${insertErr.message}`);
           recipeId = inserted?.id ?? null;
-
-          // For PDF: samle opp for bakgrunn-ingredienshenting
-          if (isPdfImport && recipeId) {
-            savedForBackground.push({ id: recipeId, title: recipe.title });
-          }
         }
 
         // Lagre ingredienser (kun for bilde/tekst som allerede har dem)
@@ -351,39 +377,10 @@ export function useRecipeImport() {
 
       setSavedCount(totalIngredients);
       setStep('done');
-
-      // PDF: hent ingredienser parallelt i bakgrunnen
-      if (isPdfImport && savedForBackground.length > 0 && imageBase64) {
-        const b64 = imageBase64;
-        const mt = imageMediaType;
-        const showToast = useUIStore.getState().showToast;
-        (async () => {
-          const promises = savedForBackground.map(async (saved) => {
-            try {
-              const detail = await parseMealPlanIngredients(b64, mt, saved.title);
-              if (detail.ingredients.length > 0) {
-                await supabase.from('recipe_ingredients').insert(
-                  detail.ingredients.map((ing) => ({
-                    recipe_id: saved.id,
-                    name: ing.name,
-                    quantity: ing.quantity,
-                    unit: ing.unit,
-                  }))
-                );
-              }
-              if (detail.instructions) {
-                await supabase.from('recipes').update({ instructions: detail.instructions }).eq('id', saved.id);
-              }
-              if (detail.ingredients.length > 0) {
-                showToast(`${saved.title} — ${detail.ingredients.length} ingredienser klare`, '🛒');
-              }
-            } catch (e) {
-              console.error(`Bakgrunn: ingredienser for "${saved.title}" feilet:`, e);
-            }
-          });
-          await Promise.all(promises);
-        })();
-      }
+      // For PDF: berikelses-workeren (useRecipeEnrichmentWorker, montert globalt
+      // i AppLayout) plukker opp pending oppskrifter automatisk og sender toast
+      // per ferdig rett. Vi trenger ikke gjøre noe mer her — brukeren kan
+      // trygt navigere bort.
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ukjent feil');
     } finally {

@@ -6,11 +6,15 @@ import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { PWATabBar } from '@/components/pwa-tab-bar';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useRecipeEnrichmentWorker } from '@/hooks/useRecipeEnrichmentWorker';
 
 export default function AppLayout() {
   const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const isLoading = useAuthStore((s) => s.isLoading);
+
+  // Global bakgrunnsjobber som beriker oppskrifter (overlever navigering)
+  useRecipeEnrichmentWorker();
 
   if (isLoading) return null;
   if (!session) return <Redirect href="/(auth)/login" />;
