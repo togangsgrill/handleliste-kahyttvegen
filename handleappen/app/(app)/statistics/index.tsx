@@ -305,7 +305,7 @@ export default function StatisticsScreen() {
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: insets.top + 12,
-          paddingBottom: 120,
+          paddingBottom: insets.bottom + 60,
           maxWidth: 720,
           alignSelf: 'center' as any,
           width: '100%' as any,
@@ -480,51 +480,6 @@ export default function StatisticsScreen() {
             ))}
           </View>
         )}
-
-        {/* Summary Cards (lists, items, completion) */}
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 24 }}>
-          <View style={[
-            {
-              flex: 1, borderRadius: 20, padding: 16,
-              alignItems: 'center', gap: 6,
-              borderWidth: 1, borderColor: color.outlineVariant + '33',
-              backgroundColor: color.surfaceContainerLowest,
-            },
-            isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {},
-          ]}>
-            <MaterialIcons name="format-list-bulleted" size={20} color={color.primary} />
-            <Text style={{ fontSize: 28, fontWeight: '800', color: color.onSurface, fontFamily: font.headline }}>{stats?.totalLists ?? 0}</Text>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: color.onSurfaceVariant }}>Lister</Text>
-          </View>
-
-          <View style={[
-            {
-              flex: 1, borderRadius: 20, padding: 16,
-              alignItems: 'center', gap: 6,
-              borderWidth: 1, borderColor: color.outlineVariant + '33',
-              backgroundColor: color.surfaceContainerLowest,
-            },
-            isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {},
-          ]}>
-            <MaterialIcons name="shopping-basket" size={20} color={color.primary} />
-            <Text style={{ fontSize: 28, fontWeight: '800', color: color.onSurface, fontFamily: font.headline }}>{stats?.totalItems ?? 0}</Text>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: color.onSurfaceVariant }}>Varer</Text>
-          </View>
-
-          <View style={[
-            {
-              flex: 1, borderRadius: 20, padding: 16,
-              alignItems: 'center', gap: 6,
-              backgroundColor: color.primary,
-              borderWidth: 0,
-            },
-            isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.12)' } as any : {},
-          ]}>
-            <MaterialIcons name="check-circle" size={20} color={color.onPrimary} />
-            <Text style={{ fontSize: 28, fontWeight: '800', color: '#ffffff', fontFamily: font.headline }}>{completionRate}%</Text>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: color.onPrimary }}>Fullført</Text>
-          </View>
-        </View>
 
         {stats && stats.storeVisits.length === 0 && stats.gamification.totalTrips === 0 && (
           <View style={{ alignItems: 'center', paddingTop: 60, gap: 12 }}>

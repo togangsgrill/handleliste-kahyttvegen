@@ -97,7 +97,7 @@ export default function SettingsScreen() {
       if (data) setMembers(data);
     });
     supabase.from('list_activity').select('action, item_name, created_at, user_id')
-      .order('created_at', { ascending: false }).limit(10).then(({ data }) => {
+      .order('created_at', { ascending: false }).limit(5).then(({ data }) => {
         if (data) setActivity(data);
       });
   }, [householdId, session]);
@@ -171,7 +171,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: 120, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 60, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
 
         {/* Title + change button */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 } as any}>

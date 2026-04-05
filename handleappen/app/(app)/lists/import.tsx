@@ -618,7 +618,7 @@ export default function ImportScreen() {
         </View>
 
         <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 120, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: insets.bottom + 60, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}
           keyboardShouldPersistTaps="handled"
         >
           {stepSubtitles[step] ? (

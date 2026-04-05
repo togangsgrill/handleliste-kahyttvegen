@@ -259,7 +259,7 @@ export default function HistoryScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: 120, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 60, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
 
         <View style={{ marginBottom: 14 }}>
           <Text style={{ fontSize: 24, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>Handlehistorikk</Text>

@@ -221,7 +221,7 @@ export default function ListsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: 120, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 60, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
 
         {/* Hilsen + snarvei til oppskrifter */}
         <View style={{ marginBottom: 18, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>

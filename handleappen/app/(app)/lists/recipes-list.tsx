@@ -287,7 +287,7 @@ export default function RecipesListScreen() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 120, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: insets.bottom + 60, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}>
 
           {loading ? (
             <ActivityIndicator color={C.primary} style={{ marginTop: 60 }} />

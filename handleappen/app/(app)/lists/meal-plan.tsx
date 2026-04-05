@@ -334,44 +334,30 @@ export default function MealPlanScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         {/* Header */}
-        <View style={{
-          backgroundColor: 'rgba(236,253,245,0.9)',
-          paddingTop: insets.top + 8,
-          ...(isWeb ? { backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'sticky', top: 0, zIndex: 40 } as any : {}),
-        }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 14 } as any}>
+        <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 } as any}>
             <TouchableOpacity
               onPress={() => router.back()}
-              style={{ padding: 8, borderRadius: 12, backgroundColor: 'rgba(0,105,71,0.1)' }}
+              style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(0,105,71,0.08)', alignItems: 'center', justifyContent: 'center' }}
+              activeOpacity={0.7}
             >
-              <MaterialIcons name="arrow-back" size={22} color={C.primary} />
+              <MaterialIcons name="arrow-back" size={20} color={C.primary} />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 20, fontWeight: '800', color: C.text, fontFamily: C.font } as any}>Ukesmeny</Text>
-              <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>{weekLabel(weekStart)}</Text>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: C.text, fontFamily: C.font } as any} numberOfLines={1}>Ukesmeny</Text>
+              <Text style={{ fontSize: 11, color: C.textSec, fontFamily: C.fontBody } as any} numberOfLines={1}>{weekLabel(weekStart)}</Text>
             </View>
             <TouchableOpacity
               onPress={() => router.push('/(app)/lists/import')}
-              style={{ padding: 8, borderRadius: 12, backgroundColor: 'rgba(0,105,71,0.1)' }}
-              activeOpacity={0.8}
+              style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(0,105,71,0.08)', alignItems: 'center', justifyContent: 'center' }}
+              activeOpacity={0.7}
             >
-              <MaterialIcons name="file-upload" size={22} color={C.primary} />
+              <MaterialIcons name="file-upload" size={18} color={C.primary} />
             </TouchableOpacity>
-            {filledDays > 0 && (
-              <TouchableOpacity
-                onPress={prepareImport}
-                style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: C.primary }}
-                activeOpacity={0.8}
-              >
-                <Text style={{ fontSize: 14, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>
-                  Legg i liste
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 140, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}>
 
           {/* Ukenavigasjon */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
@@ -409,9 +395,9 @@ export default function MealPlanScreen() {
                     onPress={() => setPickingDay(i)}
                     activeOpacity={0.75}
                     style={[{
-                      backgroundColor: hasRecipe ? C.white : C.white,
-                      borderRadius: 18, padding: 16,
-                      flexDirection: 'row', alignItems: 'center', gap: 14,
+                      backgroundColor: C.white,
+                      borderRadius: 14, padding: 10,
+                      flexDirection: 'row', alignItems: 'center', gap: 10,
                       borderWidth: hasRecipe ? 0 : 1,
                       borderColor: C.outline + '33',
                       borderStyle: hasRecipe ? 'solid' : 'dashed',
@@ -419,12 +405,12 @@ export default function MealPlanScreen() {
                   >
                     {/* Dag-badge */}
                     <View style={{
-                      width: 48, height: 48, borderRadius: 14,
+                      width: 40, height: 40, borderRadius: 12,
                       backgroundColor: hasRecipe ? C.primaryContainer : C.low,
                       alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>{DAYS[i]}</Text>
-                      <Text style={{ fontSize: 13, fontWeight: '800', color: C.text, fontFamily: C.font } as any}>{date.getDate()}</Text>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>{DAYS[i]}</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: C.text, fontFamily: C.font } as any}>{date.getDate()}</Text>
                     </View>
 
                     {/* Oppskrift-emoji/gradient */}
@@ -433,81 +419,95 @@ export default function MealPlanScreen() {
                       return (
                         <View
                           style={[
-                            { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: visual.solidColor },
+                            { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: visual.solidColor },
                             isWeb ? ({
                               background: `linear-gradient(135deg, ${visual.gradient[0]}, ${visual.gradient[1]}, ${visual.gradient[2]})`,
                             } as any) : {},
                           ]}
                         >
-                          <Text style={{ fontSize: 22 }}>{visual.emoji}</Text>
+                          <Text style={{ fontSize: 18 }}>{visual.emoji}</Text>
                         </View>
                       );
                     })()}
 
                     {/* Innhold */}
-                    <View style={{ flex: 1 }}>
+                    <View style={{ flex: 1, minWidth: 0 }}>
                       {hasRecipe ? (
                         <>
-                          <Text style={{ fontSize: 16, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any} numberOfLines={1}>
+                          <Text style={{ fontSize: 14, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any} numberOfLines={1}>
                             {slot.recipe!.name}
                           </Text>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 } as any}>
-                            <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>
-                              {slot.servings} porsjoner
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' } as any}>
+                            <Text style={{ fontSize: 11, color: C.textSec, fontFamily: C.fontBody } as any}>
+                              {slot.servings} pors.
                             </Text>
                             {slot.recipe_id && (ingredientCounts[slot.recipe_id] ?? 0) > 0 ? (
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#e8faf3', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 } as any}>
-                                <Text style={{ fontSize: 10 } as any}>🛒</Text>
-                                <Text style={{ fontSize: 10, fontWeight: '700', color: '#006947', fontFamily: C.fontBody } as any}>
-                                  {ingredientCounts[slot.recipe_id]} ingredienser klare
-                                </Text>
-                              </View>
+                              <Text style={{ fontSize: 10, fontWeight: '700', color: '#006947', fontFamily: C.fontBody } as any}>
+                                · 🛒 {ingredientCounts[slot.recipe_id]} klare
+                              </Text>
                             ) : slot.recipe_id ? (
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fff8e1', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 } as any}>
-                                <Text style={{ fontSize: 10 } as any}>⏳</Text>
-                                <Text style={{ fontSize: 10, fontWeight: '600', color: '#b45309', fontFamily: C.fontBody } as any}>
-                                  henter ingredienser...
-                                </Text>
-                              </View>
+                              <Text style={{ fontSize: 10, fontWeight: '600', color: '#b45309', fontFamily: C.fontBody } as any}>
+                                · ⏳ henter...
+                              </Text>
                             ) : null}
                           </View>
                         </>
                       ) : (
-                        <Text style={{ fontSize: 15, color: C.outline, fontFamily: C.fontBody } as any}>
+                        <Text style={{ fontSize: 13, color: C.outline, fontFamily: C.fontBody } as any}>
                           Legg til middag...
                         </Text>
                       )}
                     </View>
 
-                    {hasRecipe && (
+                    {hasRecipe ? (
                       <TouchableOpacity
                         onPress={(e) => { e.stopPropagation(); assignRecipe(i, null); }}
                         hitSlop={8}
-                        style={{ padding: 6, borderRadius: 8, backgroundColor: C.error + '15' }}
+                        style={{ padding: 4, borderRadius: 6, backgroundColor: C.error + '15' }}
                       >
-                        <MaterialIcons name="close" size={16} color={C.error} />
+                        <MaterialIcons name="close" size={14} color={C.error} />
                       </TouchableOpacity>
+                    ) : (
+                      <MaterialIcons name="add-circle-outline" size={18} color={C.outline} />
                     )}
-                    <MaterialIcons
-                      name={hasRecipe ? 'edit' : 'add-circle-outline'}
-                      size={20}
-                      color={C.outline}
-                    />
                   </TouchableOpacity>
                 );
               })}
             </View>
           )}
 
-          {/* Oppsummering */}
           {filledDays > 0 && (
-            <View style={{ marginTop: 24, padding: 16, backgroundColor: C.container, borderRadius: 16 }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: C.textSec, fontFamily: C.fontBody } as any}>
-                {filledDays} av 7 dager planlagt · trykk «Legg i liste» for å importere ingredienser
+            <View style={{ marginTop: 14, padding: 12, backgroundColor: C.container, borderRadius: 12 }}>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: C.textSec, fontFamily: C.fontBody, textAlign: 'center' } as any}>
+                {filledDays} av 7 dager planlagt
               </Text>
             </View>
           )}
         </ScrollView>
+
+        {/* Sticky bunn-knapp: Legg i liste */}
+        {filledDays > 0 && (
+          <View style={{
+            position: 'absolute',
+            left: 16, right: 16,
+            bottom: 78 + insets.bottom,
+            zIndex: 50,
+          } as any}>
+            <TouchableOpacity
+              onPress={prepareImport}
+              activeOpacity={0.85}
+              style={[{
+                paddingVertical: 14, borderRadius: 14,
+                alignItems: 'center', justifyContent: 'center',
+                backgroundColor: C.primary,
+              }, isWeb ? ({ boxShadow: '0px 8px 24px rgba(0,105,71,0.35)' } as any) : {}]}
+            >
+              <Text style={{ fontSize: 15, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>
+                Legg {filledDays} dager i liste
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Velg oppskrift modal */}
         <Modal visible={pickingDay !== null} transparent animationType="slide">
@@ -629,24 +629,36 @@ export default function MealPlanScreen() {
 
                   {/* Listevalg */}
                   {shoppingLists.length > 1 && (
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <View style={{ paddingHorizontal: 16, marginBottom: 14 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 6 } as any}>
+                        Velg liste
+                      </Text>
+                      <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' } as any}>
                         {shoppingLists.map((l) => (
                           <TouchableOpacity
                             key={l.id}
                             onPress={() => setSelectedListId(l.id)}
+                            activeOpacity={0.7}
                             style={{
-                              paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
-                              backgroundColor: selectedListId === l.id ? C.primary : C.container,
-                            }}
+                              flexDirection: 'row', alignItems: 'center', gap: 6,
+                              paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
+                              backgroundColor: selectedListId === l.id ? C.primary : C.white,
+                              borderWidth: 1,
+                              borderColor: selectedListId === l.id ? C.primary : C.outline + '44',
+                            } as any}
                           >
+                            <MaterialIcons
+                              name={selectedListId === l.id ? 'radio-button-checked' : 'radio-button-unchecked'}
+                              size={14}
+                              color={selectedListId === l.id ? C.white : C.outline}
+                            />
                             <Text style={{ fontSize: 13, fontWeight: '600', color: selectedListId === l.id ? C.white : C.text, fontFamily: C.fontBody } as any}>
                               {l.name}
                             </Text>
                           </TouchableOpacity>
                         ))}
                       </View>
-                    </ScrollView>
+                    </View>
                   )}
 
                   <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}>

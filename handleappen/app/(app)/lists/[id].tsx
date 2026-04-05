@@ -166,16 +166,16 @@ export default function ListDetailScreen() {
           </View>
 
           {/* Add Item */}
-          <View style={{ marginBottom: (searchResults.length > 0 || kassalResults.length > 0) ? 0 : 32 }}>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ marginBottom: (searchResults.length > 0 || kassalResults.length > 0) ? 0 : 20 }}>
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
               <View
                 style={[
-                  { flex: 1, backgroundColor: 'rgba(178,246,222,0.5)', borderRadius: 999, paddingHorizontal: 24, paddingVertical: 16, flexDirection: 'row', alignItems: 'center' },
+                  { flex: 1, backgroundColor: 'rgba(178,246,222,0.5)', borderRadius: 999, paddingHorizontal: 18, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' },
                 ]}
               >
-                <MaterialIcons name="shopping-basket" size={20} color={C.textSec} style={{ marginRight: 12 }} />
+                <MaterialIcons name="shopping-basket" size={18} color={C.textSec} style={{ marginRight: 10 }} />
                 <TextInput
-                  style={{ flex: 1, fontSize: 18, color: C.text, fontWeight: '500', fontFamily: C.fontBody }}
+                  style={{ flex: 1, fontSize: 15, color: C.text, fontWeight: '500', fontFamily: C.fontBody }}
                   placeholder="Legg til i listen..."
                   placeholderTextColor="rgba(47,101,85,0.5)"
                   value={newItemName}
@@ -187,27 +187,35 @@ export default function ListDetailScreen() {
                   onSubmitEditing={() => handleAdd()}
                   returnKeyType="done"
                 />
-                {Platform.OS === 'web' && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 } as any}>
-                    <TouchableOpacity onPress={() => setShowScanner(true)}>
-                      <MaterialIcons name="qr-code-scanner" size={20} color={C.textSec} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setShowReceiptScanner(true)}>
-                      <MaterialIcons name="receipt-long" size={20} color={C.textSec} />
-                    </TouchableOpacity>
-                  </View>
-                )}
               </View>
               <TouchableOpacity
                 style={[
-                  { width: 56, height: 56, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: C.primary },
+                  { width: 44, height: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: C.primary },
                   Platform.OS === 'web' ? ({ boxShadow: '0px 4px 16px rgba(0,105,71,0.35)' } as any) : undefined,
                 ]}
                 onPress={() => handleAdd()}
                 activeOpacity={0.8}
               >
-                <MaterialIcons name="add" size={24} color={C.white} />
+                <MaterialIcons name="add" size={22} color={C.white} />
               </TouchableOpacity>
+              {Platform.OS === 'web' && (
+                <>
+                  <TouchableOpacity
+                    onPress={() => setShowScanner(true)}
+                    style={{ width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: C.white, borderWidth: 1, borderColor: C.outline + '44' }}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialIcons name="qr-code-scanner" size={18} color={C.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setShowReceiptScanner(true)}
+                    style={{ width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: C.white, borderWidth: 1, borderColor: C.outline + '44' }}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialIcons name="receipt-long" size={18} color={C.primary} />
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
 
             {/* Autocomplete dropdown — historikk */}
