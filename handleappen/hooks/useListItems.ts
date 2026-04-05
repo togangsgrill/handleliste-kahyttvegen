@@ -42,15 +42,17 @@ export function useListItems(listId: string | undefined) {
     fetchItems();
   }, [fetchItems]);
 
-  // Realtime subscription — avhenger KUN av listId for å unngå
-  // at kanalen rives ned og gjenopprettes ved hver re-render (som kan
-  // trigge `cannot add postgres_changes callbacks after subscribe()`
-  // når Supabase-klienten gjenbruker samme kanalnavn).
+  // Realtime subscription — bruk unikt kanalnavn per mount for å unngå
+  // at Supabase-klienten gjenbruker et kanal-objekt som allerede har
+  // kalt subscribe(), noe som trigger
+  // `cannot add postgres_changes callbacks after subscribe()`
+  // ved rask remount (navigering mellom skjermer).
   useEffect(() => {
     if (!listId) return;
 
+    const channelName = `items:${listId}:${Math.random().toString(36).slice(2, 10)}`;
     const channel = supabase
-      .channel(`items:${listId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
