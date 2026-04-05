@@ -108,7 +108,7 @@ async function getCached(ean: string): Promise<KassalProduct | null> {
     .from('kassal_products')
     .select('*')
     .eq('ean', ean)
-    .single();
+    .maybeSingle();
   if (!data) return null;
   const age = Date.now() - new Date(data.fetched_at).getTime();
   if (age > CACHE_TTL_MS) return null;

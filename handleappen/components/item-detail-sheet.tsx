@@ -110,7 +110,7 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
       .from('kassal_products')
       .select('allergens')
       .eq('ean', ean)
-      .single();
+      .maybeSingle();
     if (data?.allergens) {
       setAllergens(data.allergens as KassalAllergen[]);
     }
