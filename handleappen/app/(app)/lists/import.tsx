@@ -318,10 +318,15 @@ export default function ImportScreen() {
           ))}
         </View>
 
+        <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody, textAlign: 'center', marginBottom: 12 } as any}>
+          Ingredienser hentes automatisk i bakgrunnen etter lagring.
+        </Text>
+
         <PrimaryButton
-          label={`Gå til ingredienser (${selectedCount} oppskrifter) →`}
-          onPress={goToIngredients}
+          label={`Lagre ${selectedCount} oppskrifter`}
+          onPress={handleSave}
           disabled={selectedCount === 0}
+          loading={saving}
         />
       </>
     );
@@ -519,11 +524,15 @@ export default function ImportScreen() {
         <Text style={{ fontSize: 22, fontWeight: '800', color: C.text, fontFamily: C.font, textAlign: 'center' } as any}>
           {savedNames.length === 1 ? `${savedNames[0]} er lagret!` : `${savedNames.length} oppskrifter lagret!`}
         </Text>
-        {savedCount > 0 && (
+        {savedCount > 0 ? (
           <Text style={{ fontSize: 15, color: C.textSec, fontFamily: C.fontBody, textAlign: 'center' } as any}>
             {savedCount} ingredienser lagt til i handlelisten.
           </Text>
-        )}
+        ) : isPdf ? (
+          <Text style={{ fontSize: 15, color: C.textSec, fontFamily: C.fontBody, textAlign: 'center' } as any}>
+            Ingredienser hentes i bakgrunnen og er snart klare i ukesmenyen.
+          </Text>
+        ) : null}
         <View style={{ gap: 10, width: '100%', marginTop: 16 } as any}>
           <TouchableOpacity
             style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', backgroundColor: C.primary }}
@@ -560,16 +569,14 @@ export default function ImportScreen() {
     done: '',
   };
 
-  const allSteps: ImportStep[] = recipes.length > 1
-    ? ['input', 'select-recipes', 'ingredients']
+  const isPdf = inputMode === 'pdf';
+  const allSteps: ImportStep[] = isPdf
+    ? ['input', 'select-recipes']
     : ['input', 'ingredients'];
 
   const handleBack = () => {
     if (step === 'done') { reset(); return; }
-    if (step === 'ingredients') {
-      setStep(recipes.length > 1 ? 'select-recipes' : 'input');
-      return;
-    }
+    if (step === 'ingredients') { setStep('input'); return; }
     if (step === 'select-recipes') { setStep('input'); return; }
     router.back();
   };

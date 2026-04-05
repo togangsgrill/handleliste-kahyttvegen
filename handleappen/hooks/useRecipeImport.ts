@@ -167,37 +167,13 @@ export function useRecipeImport() {
           source_url: null,
           source_confidence: 0,
           ingredients: [],
-          loadingIngredients: true,
+          loadingIngredients: false,
           selected: true,
         }));
         setRecipes(initial);
         setStep('select-recipes');
         setLoading(false);
         setProgress(null);
-
-        // Hent ingredienser i bakgrunnen
-        for (let i = 0; i < titles.length; i++) {
-          if (abortRef.current) break;
-          try {
-            const ings = await parseMealPlanIngredients(imageBase64, imageMediaType, titles[i].title);
-            setRecipes((prev) =>
-              prev.map((r, idx) => idx === i ? {
-                ...r,
-                ingredients: ings.map((ing) => ({
-                  ...ing,
-                  selected: !ing.is_staple,
-                  allergens: [],
-                  substitute: null,
-                })),
-                loadingIngredients: false,
-              } : r)
-            );
-          } catch {
-            setRecipes((prev) =>
-              prev.map((r, idx) => idx === i ? { ...r, ingredients: [], loadingIngredients: false } : r)
-            );
-          }
-        }
       } else {
         // Bilde eller tekst: ett kall → én oppskrift
         let result: RecipeParseResult;
@@ -275,7 +251,9 @@ export function useRecipeImport() {
     setError(null);
 
     const selected = recipes.filter((r) => r.selected);
+    const isPdfImport = inputMode === 'pdf';
     let totalIngredients = 0;
+    const savedForBackground: { id: string; title: string }[] = [];
 
     try {
       for (const recipe of selected) {
@@ -303,9 +281,14 @@ export function useRecipeImport() {
 
           if (insertErr) throw new Error(`Kunne ikke lagre ${recipe.title}: ${insertErr.message}`);
           recipeId = inserted?.id ?? null;
+
+          // For PDF: samle opp for bakgrunn-ingredienshenting
+          if (isPdfImport && recipeId) {
+            savedForBackground.push({ id: recipeId, title: recipe.title });
+          }
         }
 
-        // Lagre ingredienser
+        // Lagre ingredienser (kun for bilde/tekst som allerede har dem)
         if (recipeId && !existing && recipe.ingredients.length > 0) {
           await supabase.from('recipe_ingredients').insert(
             recipe.ingredients.map((ing) => ({
@@ -317,8 +300,8 @@ export function useRecipeImport() {
           );
         }
 
-        // Legg valgte ingredienser i handlelisten
-        if (recipeId && selectedListId) {
+        // Legg valgte ingredienser i handlelisten (kun bilde/tekst)
+        if (recipeId && selectedListId && recipe.ingredients.length > 0) {
           const toAdd = recipe.ingredients.filter((ing) => ing.selected);
           for (const ing of toAdd) {
             const { data: existingItem } = await supabase
@@ -352,12 +335,37 @@ export function useRecipeImport() {
 
       setSavedCount(totalIngredients);
       setStep('done');
+
+      // PDF: hent ingredienser i bakgrunnen etter at done-skjermen vises
+      if (isPdfImport && savedForBackground.length > 0 && imageBase64) {
+        const b64 = imageBase64;
+        const mt = imageMediaType;
+        (async () => {
+          for (const saved of savedForBackground) {
+            try {
+              const ings = await parseMealPlanIngredients(b64, mt, saved.title);
+              if (ings.length > 0) {
+                await supabase.from('recipe_ingredients').insert(
+                  ings.map((ing) => ({
+                    recipe_id: saved.id,
+                    name: ing.name,
+                    quantity: ing.quantity,
+                    unit: ing.unit,
+                  }))
+                );
+              }
+            } catch (e) {
+              console.error(`Bakgrunn: ingredienser for "${saved.title}" feilet:`, e);
+            }
+          }
+        })();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ukjent feil');
     } finally {
       setSaving(false);
     }
-  }, [householdId, recipes, selectedListId]);
+  }, [householdId, recipes, selectedListId, inputMode, imageBase64, imageMediaType]);
 
   // ── Reset ─────────────────────────────────────────────────────────────
 
