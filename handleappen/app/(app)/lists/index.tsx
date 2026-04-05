@@ -272,25 +272,76 @@ export default function ListsScreen() {
           </View>
         )}
 
-        {/* Ukesmeny-snarvei */}
-        <TouchableOpacity
-          onPress={() => router.push('/(app)/lists/meal-plan')}
-          activeOpacity={0.8}
-          style={[{
-            backgroundColor: C.white, borderRadius: 16, padding: 12, marginBottom: 14,
-            flexDirection: 'row', alignItems: 'center', gap: 12,
-            borderWidth: 1, borderColor: C.outline + '22',
-          }, isWeb ? ({ boxShadow: '0px 4px 12px rgba(0,54,42,0.04)' } as any) : {}]}
-        >
-          <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: C.low, alignItems: 'center', justifyContent: 'center' }}>
-            <MaterialIcons name="restaurant-menu" size={20} color={C.primary} />
+        {/* Mat & oppskrifter — samlet seksjon */}
+        <View style={{ marginBottom: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody } as any}>
+              Mat & oppskrifter
+            </Text>
+            {recipes.length > 0 && (
+              <TouchableOpacity onPress={() => router.push('/(app)/lists/recipes-list')} activeOpacity={0.7}>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: C.primary, fontFamily: C.fontBody } as any}>Se alle</Text>
+              </TouchableOpacity>
+            )}
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>Ukesmeny</Text>
-            <Text style={{ fontSize: 11, color: C.textSec, marginTop: 1, fontFamily: C.fontBody } as any}>Planlegg middager og legg ingredienser i liste</Text>
-          </View>
-          <MaterialIcons name="chevron-right" size={18} color={C.outline} />
-        </TouchableOpacity>
+
+          {/* Ukesmeny-snarvei */}
+          <TouchableOpacity
+            onPress={() => router.push('/(app)/lists/meal-plan')}
+            activeOpacity={0.8}
+            style={[{
+              backgroundColor: C.white, borderRadius: 14, padding: 12, marginBottom: 8,
+              flexDirection: 'row', alignItems: 'center', gap: 12,
+              borderWidth: 1, borderColor: C.outline + '22',
+            }, shadows.cardLight]}
+          >
+            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: C.low, alignItems: 'center', justifyContent: 'center' }}>
+              <MaterialIcons name="restaurant-menu" size={20} color={C.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>Ukesmeny</Text>
+              <Text style={{ fontSize: 11, color: C.textSec, marginTop: 1, fontFamily: C.fontBody } as any}>Planlegg middager · generer liste</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={18} color={C.outline} />
+          </TouchableOpacity>
+
+          {/* Oppskrifter — 2-kolonne grid med fast bredde */}
+          {recipes.length > 0 && (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 } as any}>
+              {recipes.slice(0, 3).map((r) => (
+                <TouchableOpacity
+                  key={r.id}
+                  onPress={() => router.push('/(app)/lists/recipes-list')}
+                  activeOpacity={0.7}
+                  style={[{
+                    flexBasis: 'calc(50% - 4px)' as any, minWidth: 0,
+                    flexDirection: 'row', alignItems: 'center', gap: 8,
+                    backgroundColor: C.white, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 10,
+                    borderWidth: 1, borderColor: C.outline + '22',
+                  }, shadows.cardLight]}
+                >
+                  <MaterialIcons name="restaurant" size={14} color={C.primary} />
+                  <Text style={{ flex: 1, fontSize: 12, fontWeight: '600', color: C.text, fontFamily: C.fontBody } as any} numberOfLines={1}>
+                    {r.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                onPress={() => router.push('/(app)/lists/import')}
+                activeOpacity={0.7}
+                style={{
+                  flexBasis: 'calc(50% - 4px)' as any, minWidth: 0,
+                  flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  backgroundColor: C.low, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 10,
+                  borderWidth: 1, borderColor: C.outline + '33', borderStyle: 'dashed',
+                } as any}
+              >
+                <MaterialIcons name="add" size={14} color={C.textSec} />
+                <Text style={{ fontSize: 12, fontWeight: '600', color: C.textSec, fontFamily: C.fontBody } as any}>Importer</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
 
         {/* Gamification-kort */}
         {homeStats && homeStats.totalTrips > 0 && (
@@ -311,7 +362,7 @@ export default function ListsScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 } as any}>
                   <Text style={{ fontSize: 18, lineHeight: 22 }}>🛒</Text>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#ffffff', opacity: 0.9, fontFamily: C.fontBody, letterSpacing: 0.5 } as any}>Din handleprofil</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#ffffff', opacity: 0.9, fontFamily: C.fontBody, letterSpacing: 0.5 } as any}>Mer innsikt</Text>
                 </View>
                 <MaterialIcons name="chevron-right" size={18} color="rgba(255,255,255,0.6)" />
               </View>
@@ -368,52 +419,6 @@ export default function ListsScreen() {
               </View>
             </View>
           </TouchableOpacity>
-        )}
-
-        {/* Oppskrifter */}
-        {recipes.length > 0 && (
-          <View style={{ marginBottom: 20 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Oppskrifter</Text>
-              <TouchableOpacity onPress={() => router.push('/(app)/lists/recipes-list')} activeOpacity={0.7}>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: C.primary, fontFamily: C.fontBody } as any}>Se alle</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 } as any}>
-              {recipes.map((r) => (
-                <TouchableOpacity
-                  key={r.id}
-                  onPress={() => router.push('/(app)/lists/recipes-list')}
-                  activeOpacity={0.7}
-                  style={[{
-                    flexDirection: 'row', alignItems: 'center', gap: 10,
-                    backgroundColor: C.white, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12,
-                    borderWidth: 1, borderColor: C.outline + '33',
-                  }, isWeb ? ({ boxShadow: '0px 2px 8px rgba(0,54,42,0.04)' } as any) : {}]}
-                >
-                  <MaterialIcons name="restaurant" size={16} color={C.primary} />
-                  <View>
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: C.text, fontFamily: C.fontBody } as any}>{r.name}</Text>
-                    {r.source_label && (
-                      <Text style={{ fontSize: 11, color: C.textSec, fontFamily: C.fontBody } as any}>{r.source_label}</Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity
-                onPress={() => router.push('/(app)/lists/import')}
-                activeOpacity={0.7}
-                style={{
-                  flexDirection: 'row', alignItems: 'center', gap: 8,
-                  backgroundColor: C.low, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12,
-                  borderWidth: 1, borderColor: C.outline + '33', borderStyle: 'dashed',
-                } as any}
-              >
-                <MaterialIcons name="add" size={16} color={C.textSec} />
-                <Text style={{ fontSize: 14, fontWeight: '600', color: C.textSec, fontFamily: C.fontBody } as any}>Importer</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
         )}
 
       </ScrollView>

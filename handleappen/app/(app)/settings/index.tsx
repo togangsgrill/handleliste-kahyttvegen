@@ -190,8 +190,8 @@ export default function SettingsScreen() {
         </View>
 
         {/* Members */}
-        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 } as any}>
+        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 12 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 } as any}>
             <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Aktive medlemmer</Text>
             <View style={{ backgroundColor: C.primaryContainer, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 9999 }}>
               <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 2, color: C.onPrimaryContainer, fontFamily: C.fontBody } as any}>{members.length} stk</Text>
@@ -230,7 +230,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Invite card */}
-        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 20px 40px rgba(0,54,42,0.08)' } as any : {}]}>
+        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 12 }, isWeb ? { boxShadow: '0px 20px 40px rgba(0,54,42,0.08)' } as any : {}]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 } as any}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, marginBottom: 6, fontFamily: C.font } as any}>Inviter til husholdning</Text>
@@ -250,15 +250,15 @@ export default function SettingsScreen() {
         </View>
 
         {/* Allergener */}
-        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
+        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 12 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 } as any}>
             <MaterialIcons name="warning-amber" size={20} color={C.primary} />
             <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Allergier og intoleranser</Text>
           </View>
-          <Text style={{ fontSize: 13, color: C.textSec, fontFamily: C.fontBody, marginBottom: 20 } as any}>
+          <Text style={{ fontSize: 13, color: C.textSec, fontFamily: C.fontBody, marginBottom: 12 } as any}>
             Merkte allergener vises på ingredienser under oppskriftsimport, med forslag til erstatninger.
           </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 } as any}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 } as any}>
             {ALLERGENS.map((a) => {
               const active = allergens.includes(a.key);
               return (
@@ -306,7 +306,7 @@ export default function SettingsScreen() {
         <TouchableOpacity
           onPress={() => router.push('/(app)/settings/trumf-import')}
           activeOpacity={0.8}
-          style={[{ backgroundColor: C.white, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20, flexDirection: 'row', alignItems: 'center', gap: 16 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}] as any}
+          style={[{ backgroundColor: C.white, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 16 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}] as any}
         >
           <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#e8003c12', justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ fontSize: 22 }}>🛒</Text>
@@ -322,8 +322,8 @@ export default function SettingsScreen() {
 
         {/* Recent activity */}
         {activity.length > 0 && (
-          <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 } as any}>
+          <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 12 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 } as any}>
               <MaterialIcons name="history" size={20} color={C.primary} />
               <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Siste aktivitet</Text>
             </View>
@@ -349,13 +349,13 @@ export default function SettingsScreen() {
         )}
 
         {/* Account / Logout */}
-        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: C.outline + '33' }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 } as any}>
+        <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: C.outline + '33' }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 } as any}>
             <MaterialIcons name="person" size={20} color={C.primary} />
             <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Konto</Text>
           </View>
 
-          <View style={{ gap: 12, marginBottom: 20 } as any}>
+          <View style={{ gap: 12, marginBottom: 12 } as any}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, backgroundColor: C.low, borderRadius: 16 } as any}>
               <View style={{ width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', backgroundColor: C.primary }}>
                 <Text style={{ color: '#ffffff', fontSize: 17, fontWeight: '700' } as any}>

@@ -11,7 +11,7 @@ const C = {
 const ICONS: Record<string, { name: any; label: string }> = {
   lists:      { name: 'house.fill',     label: 'Hjem' },
   history:    { name: 'clock.fill',     label: 'Historikk' },
-  statistics: { name: 'chart.bar.fill', label: 'Statistikk' },
+  statistics: { name: 'chart.bar.fill', label: 'Innsikt' },
   settings:   { name: 'gearshape.fill', label: 'Meny' },
 };
 

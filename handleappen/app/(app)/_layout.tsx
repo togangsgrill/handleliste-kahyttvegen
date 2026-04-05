@@ -63,7 +63,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="statistics"
         options={{
-          title: 'Statistikk',
+          title: 'Innsikt',
           tabBarIcon: ({ color }) => <IconSymbol size={20} name="chart.bar.fill" color={color} />,
         }}
       />

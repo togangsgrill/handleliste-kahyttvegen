@@ -87,6 +87,7 @@ export default function StatisticsScreen() {
   const householdId = useAuthStore((s) => s.householdId);
   const [stats, setStats] = useState<Stats | null>(null);
   const [showAllStores, setShowAllStores] = useState(false);
+  const [showAllMonths, setShowAllMonths] = useState(false);
 
   useEffect(() => {
     if (!householdId) return;
@@ -312,7 +313,7 @@ export default function StatisticsScreen() {
         }}
       >
         <Text style={{ fontSize: 24, fontWeight: '800', color: color.onSurface, letterSpacing: -0.5, fontFamily: font.headline }}>Oversikt</Text>
-        <Text style={{ fontSize: 13, color: color.onSurfaceVariant, marginTop: 2, marginBottom: 16, fontFamily: font.body }}>Din handleprofil</Text>
+        <Text style={{ fontSize: 13, color: color.onSurfaceVariant, marginTop: 2, marginBottom: 16, fontFamily: font.body }}>Din handlevane og forbruk</Text>
 
         {/* ===== GAMIFICATION HERO ===== */}
         {stats && stats.gamification.totalTrips > 0 && stats.gamification.daysSinceLast !== null && (
@@ -421,22 +422,31 @@ export default function StatisticsScreen() {
 
         {/* ===== MONTHLY SPEND ===== */}
         {stats && stats.monthlySpend.length > 0 && (
-          <View style={[cardStyle, { padding: 24, marginBottom: 24 }] as any}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 } as any}>
-              <MaterialIcons name="account-balance-wallet" size={22} color={color.primary} />
-              <Text style={{ fontSize: 18, fontWeight: '700', color: color.onSurface, fontFamily: font.headline } as any}>Utgifter per måned</Text>
+          <View style={[cardStyle, { padding: 14, marginBottom: 14 }] as any}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } as any}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 } as any}>
+                <MaterialIcons name="account-balance-wallet" size={16} color={color.primary} />
+                <Text style={{ fontSize: 14, fontWeight: '700', color: color.onSurface, fontFamily: font.headline } as any}>Utgifter per måned</Text>
+              </View>
+              {stats.monthlySpend.length > 3 && (
+                <TouchableOpacity onPress={() => setShowAllMonths((v) => !v)}>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: color.primary, fontFamily: font.body } as any}>
+                    {showAllMonths ? 'Vis færre' : `Se alle ${stats.monthlySpend.length}`}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
-            {stats.monthlySpend.map((m) => (
-              <View key={m.month} style={{ marginBottom: 16 } as any}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 } as any}>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: color.onSurface, fontFamily: font.body } as any}>{m.label}</Text>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: color.primary, fontFamily: font.body } as any}>
-                    {m.total.toFixed(0)} kr ({m.tripCount} turer)
+            {(showAllMonths ? stats.monthlySpend : stats.monthlySpend.slice(0, 3)).map((m, i, arr) => (
+              <View key={m.month} style={{ marginBottom: i < arr.length - 1 ? 8 : 0 } as any}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 } as any}>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: color.onSurface, fontFamily: font.body } as any}>{m.label}</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: color.primary, fontFamily: font.body } as any}>
+                    {m.total.toFixed(0)} kr · {m.tripCount} turer
                   </Text>
                 </View>
-                <View style={{ height: 10, backgroundColor: color.surfaceContainerHighest, borderRadius: 5, overflow: 'hidden' }}>
+                <View style={{ height: 5, backgroundColor: color.surfaceContainerHighest, borderRadius: 3, overflow: 'hidden' }}>
                   <View style={{
-                    height: '100%', borderRadius: 5,
+                    height: '100%', borderRadius: 3,
                     width: `${(m.total / maxMonthTotal) * 100}%`,
                     ...(isWeb ? { background: 'linear-gradient(90deg, #006947, #00feb2)' } : { backgroundColor: color.primary }),
                   } as any} />
