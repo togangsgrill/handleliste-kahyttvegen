@@ -15,6 +15,7 @@ import {
   type ImportStep,
   type ParsedIngredient,
 } from '@/hooks/useRecipeImport';
+import { RecipeCard } from '@/components/recipe-card';
 
 const C = {
   bg: '#d8fff0', white: '#ffffff', low: '#bffee7', container: '#b2f6de',
@@ -32,8 +33,8 @@ const cardStyle = [
   isWeb ? ({ boxShadow: '0px 4px 12px rgba(0,54,42,0.04)' } as any) : {},
 ];
 
-function PrimaryButton({ label, onPress, disabled = false, loading = false }: {
-  label: string; onPress: () => void; disabled?: boolean; loading?: boolean;
+function PrimaryButton({ label, onPress, disabled = false, loading = false, loadingLabel }: {
+  label: string; onPress: () => void; disabled?: boolean; loading?: boolean; loadingLabel?: string;
 }) {
   return (
     <TouchableOpacity
@@ -47,7 +48,7 @@ function PrimaryButton({ label, onPress, disabled = false, loading = false }: {
       activeOpacity={0.8}
     >
       {loading
-        ? <><ActivityIndicator color={C.white} size="small" /><Text style={{ color: C.white, fontSize: 16, fontWeight: '700', fontFamily: C.font } as any}>Venter...</Text></>
+        ? <><ActivityIndicator color={C.white} size="small" /><Text style={{ color: C.white, fontSize: 16, fontWeight: '700', fontFamily: C.font } as any}>{loadingLabel ?? 'Venter...'}</Text></>
         : <Text style={{ color: C.white, fontSize: 16, fontWeight: '700', fontFamily: C.font } as any}>{label}</Text>}
     </TouchableOpacity>
   );
@@ -111,7 +112,7 @@ export default function ImportScreen() {
 
   const {
     step, setStep, inputMode, setInputMode,
-    imageUri, imageBase64, textInput, setTextInput,
+    imageUri, imageBase64, imageMediaType, textInput, setTextInput,
     loading, progress, error,
     recipes, shoppingLists, selectedListId, setSelectedListId,
     saving, savedCount,
@@ -120,6 +121,8 @@ export default function ImportScreen() {
     toggleIngredient, selectAllIngredients, updateServings,
     handleSave, reset,
   } = useRecipeImport();
+
+  const isPdfFile = imageMediaType === 'application/pdf';
 
   // ── Fil-velger ──────────────────────────────────────────────────────────
 
@@ -201,6 +204,21 @@ export default function ImportScreen() {
                 {progress ?? 'Analyserer...'}
               </Text>
             </View>
+          ) : imageUri && isPdfFile ? (
+            <View style={{ alignItems: 'center', gap: 12, padding: 32 } as any}>
+              <View style={{
+                width: 64, height: 64, borderRadius: 16, backgroundColor: C.primaryContainer + '55',
+                alignItems: 'center', justifyContent: 'center',
+              }}>
+                <MaterialIcons name="picture-as-pdf" size={36} color={C.primary} />
+              </View>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>
+                PDF er klar
+              </Text>
+              <Text style={{ fontSize: 13, color: C.textSec, fontFamily: C.fontBody, textAlign: 'center' } as any}>
+                Trykk for å velge en annen fil
+              </Text>
+            </View>
           ) : imageUri ? (
             <Image source={{ uri: imageUri }} style={{ width: '100%', height: 240 } as any} resizeMode="cover" />
           ) : (
@@ -238,12 +256,13 @@ export default function ImportScreen() {
             loading={loading}
           />
         </View>
-      ) : imageUri && !loading ? (
+      ) : imageUri ? (
         <View style={{ marginTop: 16 }}>
           <PrimaryButton
             label={inputMode === 'pdf' ? '✨  Analyser ukesmeny' : '✨  Analyser oppskrift'}
             onPress={handleParse}
             disabled={!imageUri}
+            loading={loading}
           />
         </View>
       ) : null}
@@ -269,52 +288,26 @@ export default function ImportScreen() {
 
         <View style={{ gap: 10, marginBottom: 20 }}>
           {recipes.map((recipe, idx) => (
-            <TouchableOpacity
+            <RecipeCard
               key={idx}
+              variant="compact"
+              name={recipe.title}
+              servings={recipe.servings}
+              ingredientCount={recipe.ingredients.length || null}
+              ingredientStatus={recipe.loadingIngredients ? 'loading' : null}
+              selected={recipe.selected}
               onPress={() => toggleRecipe(idx)}
-              activeOpacity={0.75}
-              style={{
-                padding: 16, borderRadius: 16,
-                backgroundColor: recipe.selected ? C.low : C.white,
-                borderWidth: 1.5,
-                borderColor: recipe.selected ? C.primary + '55' : C.outline + '33',
-                flexDirection: 'row', alignItems: 'center', gap: 12,
-              } as any}
-            >
-              <View style={{
-                width: 24, height: 24, borderRadius: 999, marginTop: 1,
-                borderWidth: 2, borderColor: recipe.selected ? C.primary : C.outline,
-                backgroundColor: recipe.selected ? C.primary : 'transparent',
-                alignItems: 'center', justifyContent: 'center',
-              }}>
-                {recipe.selected && <MaterialIcons name="check" size={14} color={C.white} />}
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>
-                  {recipe.title}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 } as any}>
-                  <Text style={{ fontSize: 12, color: C.outline, fontFamily: C.fontBody } as any}>
-                    {recipe.servings} porsjoner
-                  </Text>
-                  {recipe.loadingIngredients ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fff8e1', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 } as any}>
-                      <ActivityIndicator size={10} color="#b45309" />
-                      <Text style={{ fontSize: 10, fontWeight: '600', color: '#b45309', fontFamily: C.fontBody } as any}>
-                        henter ingredienser...
-                      </Text>
-                    </View>
-                  ) : recipe.ingredients.length > 0 ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#e8faf3', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 } as any}>
-                      <Text style={{ fontSize: 10 } as any}>🛒</Text>
-                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#006947', fontFamily: C.fontBody } as any}>
-                        {recipe.ingredients.length} ingredienser
-                      </Text>
-                    </View>
-                  ) : null}
+              left={
+                <View style={{
+                  width: 24, height: 24, borderRadius: 999,
+                  borderWidth: 2, borderColor: recipe.selected ? C.primary : C.outline,
+                  backgroundColor: recipe.selected ? C.primary : 'transparent',
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {recipe.selected && <MaterialIcons name="check" size={14} color={C.white} />}
                 </View>
-              </View>
-            </TouchableOpacity>
+              }
+            />
           ))}
         </View>
 
@@ -322,11 +315,19 @@ export default function ImportScreen() {
           Ingredienser hentes automatisk i bakgrunnen etter lagring.
         </Text>
 
+        {error && (
+          <View style={{ marginBottom: 12, backgroundColor: 'rgba(179,27,37,0.08)', borderRadius: 12, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 } as any}>
+            <MaterialIcons name="error-outline" size={18} color={C.error} />
+            <Text style={{ flex: 1, fontSize: 14, color: C.error, fontFamily: C.fontBody } as any}>{error}</Text>
+          </View>
+        )}
+
         <PrimaryButton
           label={`Lagre ${selectedCount} oppskrifter`}
           onPress={handleSave}
           disabled={selectedCount === 0}
           loading={saving}
+          loadingLabel={progress ?? 'Lagrer oppskrifter...'}
         />
       </>
     );

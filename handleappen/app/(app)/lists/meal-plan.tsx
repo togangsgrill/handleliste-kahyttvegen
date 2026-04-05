@@ -9,6 +9,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { isStaple } from '@/hooks/useRecipeImport';
+import { RecipeCard, getRecipeVisual } from '@/components/recipe-card';
 
 const C = {
   bg: '#d8fff0', white: '#ffffff', low: '#bffee7', container: '#b2f6de',
@@ -426,6 +427,23 @@ export default function MealPlanScreen() {
                       <Text style={{ fontSize: 13, fontWeight: '800', color: C.text, fontFamily: C.font } as any}>{date.getDate()}</Text>
                     </View>
 
+                    {/* Oppskrift-emoji/gradient */}
+                    {hasRecipe && (() => {
+                      const visual = getRecipeVisual(slot.recipe!.name);
+                      return (
+                        <View
+                          style={[
+                            { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: visual.solidColor },
+                            isWeb ? ({
+                              background: `linear-gradient(135deg, ${visual.gradient[0]}, ${visual.gradient[1]}, ${visual.gradient[2]})`,
+                            } as any) : {},
+                          ]}
+                        >
+                          <Text style={{ fontSize: 22 }}>{visual.emoji}</Text>
+                        </View>
+                      );
+                    })()}
+
                     {/* Innhold */}
                     <View style={{ flex: 1 }}>
                       {hasRecipe ? (
@@ -530,35 +548,22 @@ export default function MealPlanScreen() {
                     </TouchableOpacity>
                   </View>
                 ) : (
-                  <View style={{ gap: 8 }}>
+                  <View style={{ gap: 10 }}>
                     {recipes.map((recipe) => {
                       const isSelected = pickingDay !== null && slots[pickingDay]?.recipe_id === recipe.id;
                       return (
-                        <TouchableOpacity
+                        <RecipeCard
                           key={recipe.id}
+                          variant="compact"
+                          name={recipe.name}
+                          servings={recipe.base_servings}
+                          sourceLabel={recipe.source_label}
+                          imageUrl={(recipe as any).image_url ?? null}
+                          ingredientCount={ingredientCounts[recipe.id]}
+                          selected={isSelected}
                           onPress={() => pickingDay !== null && assignRecipe(pickingDay, recipe)}
-                          activeOpacity={0.75}
-                          style={{
-                            padding: 16, borderRadius: 16,
-                            backgroundColor: isSelected ? C.primaryContainer : C.low,
-                            flexDirection: 'row', alignItems: 'center', gap: 12,
-                          } as any}
-                        >
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>
-                              {recipe.name}
-                            </Text>
-                            {recipe.source_label && (
-                              <Text style={{ fontSize: 12, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
-                                {recipe.source_label}
-                              </Text>
-                            )}
-                          </View>
-                          <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>
-                            {recipe.base_servings} porsj.
-                          </Text>
-                          {isSelected && <MaterialIcons name="check-circle" size={20} color={C.primary} />}
-                        </TouchableOpacity>
+                          right={isSelected ? <MaterialIcons name="check-circle" size={20} color={C.primary} /> : null}
+                        />
                       );
                     })}
                   </View>

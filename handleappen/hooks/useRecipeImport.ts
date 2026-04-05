@@ -253,7 +253,10 @@ export function useRecipeImport() {
   // ── Lagre ─────────────────────────────────────────────────────────────
 
   const handleSave = useCallback(async () => {
-    if (!householdId) return;
+    if (!householdId) {
+      setError('Fant ingen husholdning. Prøv å laste siden på nytt.');
+      return;
+    }
     setSaving(true);
     setError(null);
 
@@ -261,9 +264,12 @@ export function useRecipeImport() {
     const isPdfImport = inputMode === 'pdf';
     let totalIngredients = 0;
     const savedForBackground: { id: string; title: string }[] = [];
+    let savedIdx = 0;
 
     try {
       for (const recipe of selected) {
+        savedIdx++;
+        setProgress(`Lagrer ${savedIdx}/${selected.length}: ${recipe.title}`);
         // Sjekk duplikat
         const { data: existing } = await supabase.from('recipes')
           .select('id')
@@ -382,6 +388,7 @@ export function useRecipeImport() {
       setError(err instanceof Error ? err.message : 'Ukjent feil');
     } finally {
       setSaving(false);
+      setProgress(null);
     }
   }, [householdId, recipes, selectedListId, inputMode, imageBase64, imageMediaType]);
 

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { RecipeCard } from '@/components/recipe-card';
 
 const C = {
   bg: '#d8fff0', white: '#ffffff', low: '#bffee7', container: '#b2f6de',
@@ -179,43 +180,16 @@ export default function RecipesListScreen() {
           ) : (
             <View style={{ gap: 12 }}>
               {recipes.map((recipe) => (
-                <TouchableOpacity
+                <RecipeCard
                   key={recipe.id}
-                  style={cardStyle}
+                  variant="card"
+                  name={recipe.name}
+                  description={recipe.description}
+                  servings={recipe.base_servings}
+                  sourceLabel={recipe.source_label}
+                  imageUrl={(recipe as any).image_url ?? null}
                   onPress={() => openRecipe(recipe)}
-                  activeOpacity={0.7}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 } as any}>
-                    <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: C.low, alignItems: 'center', justifyContent: 'center' }}>
-                      <MaterialIcons
-                        name={(SOURCE_ICON[recipe.source_type ?? ''] ?? 'restaurant') as any}
-                        size={22} color={C.primary}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 17, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>{recipe.name}</Text>
-                      {recipe.description && (
-                        <Text style={{ fontSize: 13, color: C.textSec, fontFamily: C.fontBody, marginTop: 2 } as any} numberOfLines={2}>
-                          {recipe.description}
-                        </Text>
-                      )}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 } as any}>
-                        <View style={{ backgroundColor: C.container, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
-                          <Text style={{ fontSize: 11, fontWeight: '700', color: C.textSec, fontFamily: C.fontBody } as any}>
-                            {recipe.base_servings} porsjoner
-                          </Text>
-                        </View>
-                        {recipe.source_label && (
-                          <Text style={{ fontSize: 11, color: C.textSec, fontFamily: C.fontBody } as any}>{recipe.source_label}</Text>
-                        )}
-                        <Text style={{ fontSize: 11, color: C.outline, fontFamily: C.fontBody, marginLeft: 'auto' } as any}>
-                          {timeAgo(recipe.created_at)}
-                        </Text>
-                      </View>
-                    </View>
-                    <MaterialIcons name="chevron-right" size={20} color={C.outline} />
-                  </View>
-                </TouchableOpacity>
+                />
               ))}
             </View>
           )}
