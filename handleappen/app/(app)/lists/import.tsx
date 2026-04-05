@@ -350,9 +350,15 @@ export default function ImportScreen() {
       <>
         {selectedRecipes.map((recipe, recipeDisplayIdx) => {
           const recipeIdx = recipes.indexOf(recipe);
-          const nonStaples = recipe.ingredients.filter((i) => !i.is_staple);
-          const staples = recipe.ingredients.filter((i) => i.is_staple);
-          const selectedInRecipe = recipe.ingredients.filter((i) => i.selected).length;
+          const scale = recipe.servings / recipe.baseServings;
+          const scaled = recipe.ingredients.map((i, origIdx) => ({
+            ...i,
+            quantity: Math.round(i.quantity * scale * 10) / 10,
+            _origIdx: origIdx,
+          }));
+          const nonStaples = scaled.filter((i) => !i.is_staple);
+          const staples = scaled.filter((i) => i.is_staple);
+          const selectedInRecipe = scaled.filter((i) => i.selected).length;
 
           return (
             <View key={recipeIdx} style={{ marginBottom: 24 }}>
@@ -397,7 +403,7 @@ export default function ImportScreen() {
                     Henter ingredienser...
                   </Text>
                 </View>
-              ) : recipe.ingredients.length === 0 ? (
+              ) : scaled.length === 0 ? (
                 <View style={[cardStyle, { alignItems: 'center', gap: 8, padding: 24 }]}>
                   <MaterialIcons name="info-outline" size={24} color={C.outline} />
                   <Text style={{ fontSize: 14, color: C.textSec, fontFamily: C.fontBody, textAlign: 'center' } as any}>
@@ -409,7 +415,7 @@ export default function ImportScreen() {
                   {/* Velg alle / ingen */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4, marginBottom: 8 } as any}>
                     <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.font } as any}>
-                      {selectedInRecipe}/{recipe.ingredients.length} valgt
+                      {selectedInRecipe}/{scaled.length} valgt
                     </Text>
                     <View style={{ flexDirection: 'row', gap: 10 } as any}>
                       <TouchableOpacity onPress={() => selectAllIngredients(recipeIdx, true)} activeOpacity={0.7}>
@@ -425,17 +431,14 @@ export default function ImportScreen() {
                   {/* Ikke-basisvarer */}
                   {nonStaples.length > 0 && (
                     <View style={[cardStyle, { marginBottom: staples.length > 0 ? 12 : 0, padding: 0, overflow: 'hidden' }]}>
-                      {nonStaples.map((ing, idx) => {
-                        const globalIdx = recipe.ingredients.indexOf(ing);
-                        return (
-                          <IngredientRow
-                            key={`${ing.name}-${globalIdx}`}
-                            ing={ing}
-                            onToggle={() => toggleIngredient(recipeIdx, globalIdx)}
-                            isLast={idx === nonStaples.length - 1}
-                          />
-                        );
-                      })}
+                      {nonStaples.map((ing, idx) => (
+                        <IngredientRow
+                          key={`${ing.name}-${ing._origIdx}`}
+                          ing={ing}
+                          onToggle={() => toggleIngredient(recipeIdx, ing._origIdx)}
+                          isLast={idx === nonStaples.length - 1}
+                        />
+                      ))}
                     </View>
                   )}
 
@@ -446,17 +449,14 @@ export default function ImportScreen() {
                         Basisvarer — har du dette hjemme?
                       </Text>
                       <View style={[cardStyle, { padding: 0, overflow: 'hidden' }]}>
-                        {staples.map((ing, idx) => {
-                          const globalIdx = recipe.ingredients.indexOf(ing);
-                          return (
-                            <IngredientRow
-                              key={`${ing.name}-${globalIdx}`}
-                              ing={ing}
-                              onToggle={() => toggleIngredient(recipeIdx, globalIdx)}
-                              isLast={idx === staples.length - 1}
-                            />
-                          );
-                        })}
+                        {staples.map((ing, idx) => (
+                          <IngredientRow
+                            key={`${ing.name}-${ing._origIdx}`}
+                            ing={ing}
+                            onToggle={() => toggleIngredient(recipeIdx, ing._origIdx)}
+                            isLast={idx === staples.length - 1}
+                          />
+                        ))}
                       </View>
                     </>
                   )}

@@ -27,6 +27,7 @@ export interface ParsedIngredient {
 
 export interface ImportedRecipe {
   title: string;
+  baseServings: number;
   servings: number;
   description: string | null;
   source_type: string | null;
@@ -161,6 +162,7 @@ export function useRecipeImport() {
         const titles = await parseMealPlanTitles(imageBase64, imageMediaType);
         const initial: ImportedRecipe[] = titles.map((r) => ({
           title: r.title,
+          baseServings: r.servings ?? 4,
           servings: r.servings ?? 4,
           description: null,
           source_type: 'unknown',
@@ -190,6 +192,7 @@ export function useRecipeImport() {
 
         setRecipes([{
           title: result.title,
+          baseServings: result.servings ?? 4,
           servings: result.servings ?? 4,
           description: result.description ?? null,
           source_type: normalizeSourceType(result.source_type),
@@ -271,7 +274,7 @@ export function useRecipeImport() {
           const { data: inserted, error: insertErr } = await supabase.from('recipes').insert({
             household_id: householdId,
             name: recipe.title,
-            base_servings: recipe.servings,
+            base_servings: recipe.baseServings,
             source_type: normalizeSourceType(recipe.source_type),
             source_label: recipe.source_label?.trim() || null,
             source_url: recipe.source_url?.trim() || null,
@@ -301,10 +304,12 @@ export function useRecipeImport() {
           );
         }
 
-        // Legg valgte ingredienser i handlelisten (kun bilde/tekst)
+        // Legg valgte ingredienser i handlelisten (skalert)
         if (recipeId && selectedListId && recipe.ingredients.length > 0) {
+          const scale = recipe.servings / recipe.baseServings;
           const toAdd = recipe.ingredients.filter((ing) => ing.selected);
-          for (const ing of toAdd) {
+          for (const _ing of toAdd) {
+            const ing = { ..._ing, quantity: Math.round(_ing.quantity * scale * 10) / 10 };
             const { data: existingItem } = await supabase
               .from('list_items')
               .select('id, quantity')
