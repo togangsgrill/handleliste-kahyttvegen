@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useUIStore } from '@/stores/useUIStore';
 import {
   parseRecipeFromImage,
   parseRecipe,
@@ -336,12 +337,13 @@ export function useRecipeImport() {
       setSavedCount(totalIngredients);
       setStep('done');
 
-      // PDF: hent ingredienser i bakgrunnen etter at done-skjermen vises
+      // PDF: hent ingredienser parallelt i bakgrunnen
       if (isPdfImport && savedForBackground.length > 0 && imageBase64) {
         const b64 = imageBase64;
         const mt = imageMediaType;
+        const showToast = useUIStore.getState().showToast;
         (async () => {
-          for (const saved of savedForBackground) {
+          const promises = savedForBackground.map(async (saved) => {
             try {
               const ings = await parseMealPlanIngredients(b64, mt, saved.title);
               if (ings.length > 0) {
@@ -353,11 +355,13 @@ export function useRecipeImport() {
                     unit: ing.unit,
                   }))
                 );
+                showToast(`${saved.title} — ${ings.length} ingredienser klare`, '🛒');
               }
             } catch (e) {
               console.error(`Bakgrunn: ingredienser for "${saved.title}" feilet:`, e);
             }
-          }
+          });
+          await Promise.all(promises);
         })();
       }
     } catch (err) {
