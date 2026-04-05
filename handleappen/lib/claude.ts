@@ -183,20 +183,24 @@ Regler:
 - Returner KUN gyldig JSON, ingen annen tekst, ingen kodeblokk`;
 
 const MEAL_PLAN_INGREDIENTS_SYSTEM = `Du er en ekspert på å lese norske oppskrifter fra PDF-dokumenter.
-Finn oppskriften med tittelen som brukeren oppgir og returner ingredienslisten som JSON-array.
+Finn oppskriften med tittelen som brukeren oppgir og returner ingredienser og fremgangsmåte som JSON.
 
-Returner KUN et JSON-array:
-[
-  {"name": "laksefilet", "quantity": 500, "unit": "g", "is_staple": false},
-  {"name": "smør", "quantity": 1, "unit": "ss", "is_staple": true}
-]
+Returner KUN et JSON-objekt:
+{
+  "ingredients": [
+    {"name": "laksefilet", "quantity": 500, "unit": "g", "is_staple": false},
+    {"name": "smør", "quantity": 1, "unit": "ss", "is_staple": true}
+  ],
+  "instructions": "1. Forvarm ovnen til 175 grader.\\n2. Legg laksen i en form.\\n3. Stek i 13 minutter."
+}
 
 Regler:
 - Hent KUN ingredienser som faktisk står i dokumentet for denne oppskriften
 - Normaliser ingrediensnavn til norsk, små bokstaver
 - ${IS_STAPLE_RULE}
 - Konverter tekstmengder til tall ("en halv" → 0.5, "to" → 2, "3 klyper" → 3)
-- Hvis oppskriften ikke finnes i dokumentet, returner tom array []
+- instructions: hent fremgangsmåten fra dokumentet, nummererte steg. Bruk \\n mellom steg
+- Hvis oppskriften ikke finnes i dokumentet, returner {"ingredients": [], "instructions": null}
 - Returner KUN gyldig JSON, ingen annen tekst`;
 
 // Steg 1: Hent kun oppskriftstitler fra PDF (rask)
@@ -222,32 +226,44 @@ export async function parseMealPlanTitles(fileBase64: string, mediaType: string)
   return recipes;
 }
 
-// Steg 2: Hent ingredienser for én oppskrift (kjøres i bakgrunn)
+// Steg 2: Hent ingredienser + fremgangsmåte for én oppskrift (kjøres i bakgrunn)
+export interface MealPlanRecipeDetail {
+  ingredients: { name: string; quantity: number; unit: string | null; is_staple: boolean }[];
+  instructions: string | null;
+}
+
 export async function parseMealPlanIngredients(
   fileBase64: string,
   mediaType: string,
   recipeTitle: string,
-): Promise<{ name: string; quantity: number; unit: string | null; is_staple: boolean }[]> {
+): Promise<MealPlanRecipeDetail> {
   const isPdf = mediaType === 'application/pdf';
   const contentBlock = isPdf
     ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: fileBase64 } }
     : { type: 'image', source: { type: 'base64', media_type: mediaType, data: fileBase64 } };
 
-  const ingText = await callClaudeAPI({
+  const text = await callClaudeAPI({
     model: CLAUDE_MODEL,
-    max_tokens: 1500,
+    max_tokens: 2000,
     system: MEAL_PLAN_INGREDIENTS_SYSTEM,
     messages: [{
       role: 'user',
       content: [
         contentBlock,
-        { type: 'text', text: `Finn ingredienslisten for oppskriften "${recipeTitle}" i dette dokumentet. Returner KUN JSON-array.` },
+        { type: 'text', text: `Finn ingredienser og fremgangsmåte for oppskriften "${recipeTitle}" i dette dokumentet. Returner KUN JSON.` },
       ],
     }],
   });
 
-  const ingredients = JSON.parse(extractJson(ingText));
-  return Array.isArray(ingredients) ? ingredients : [];
+  const parsed = JSON.parse(extractJson(text));
+  // Bakoverkompatibel: håndter både gammelt array-format og nytt objekt-format
+  if (Array.isArray(parsed)) {
+    return { ingredients: parsed, instructions: null };
+  }
+  return {
+    ingredients: Array.isArray(parsed.ingredients) ? parsed.ingredients : [],
+    instructions: parsed.instructions ?? null,
+  };
 }
 
 // Kombinert (for bakoverkompatibilitet)

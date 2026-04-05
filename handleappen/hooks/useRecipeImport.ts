@@ -34,6 +34,7 @@ export interface ImportedRecipe {
   source_label: string | null;
   source_url: string | null;
   source_confidence: number;
+  instructions: string | null;
   ingredients: ParsedIngredient[];
   loadingIngredients: boolean;
   selected: boolean; // for velg-oppskrifter-steget
@@ -169,6 +170,7 @@ export function useRecipeImport() {
           source_label: 'Ukesmeny',
           source_url: null,
           source_confidence: 0,
+          instructions: null,
           ingredients: [],
           loadingIngredients: false,
           selected: true,
@@ -199,6 +201,7 @@ export function useRecipeImport() {
           source_label: result.source_label ?? null,
           source_url: result.source_url ?? null,
           source_confidence: result.source_confidence ?? 0,
+          instructions: null,
           ingredients: result.ingredients.map((ing) => ({
             ...ing,
             selected: !ing.is_staple,
@@ -281,6 +284,7 @@ export function useRecipeImport() {
             source_confidence: recipe.source_confidence,
             description: recipe.description,
             description_is_ai: true,
+            instructions: recipe.instructions,
           }).select('id').single();
 
           if (insertErr) throw new Error(`Kunne ikke lagre ${recipe.title}: ${insertErr.message}`);
@@ -350,17 +354,22 @@ export function useRecipeImport() {
         (async () => {
           const promises = savedForBackground.map(async (saved) => {
             try {
-              const ings = await parseMealPlanIngredients(b64, mt, saved.title);
-              if (ings.length > 0) {
+              const detail = await parseMealPlanIngredients(b64, mt, saved.title);
+              if (detail.ingredients.length > 0) {
                 await supabase.from('recipe_ingredients').insert(
-                  ings.map((ing) => ({
+                  detail.ingredients.map((ing) => ({
                     recipe_id: saved.id,
                     name: ing.name,
                     quantity: ing.quantity,
                     unit: ing.unit,
                   }))
                 );
-                showToast(`${saved.title} — ${ings.length} ingredienser klare`, '🛒');
+              }
+              if (detail.instructions) {
+                await supabase.from('recipes').update({ instructions: detail.instructions }).eq('id', saved.id);
+              }
+              if (detail.ingredients.length > 0) {
+                showToast(`${saved.title} — ${detail.ingredients.length} ingredienser klare`, '🛒');
               }
             } catch (e) {
               console.error(`Bakgrunn: ingredienser for "${saved.title}" feilet:`, e);
