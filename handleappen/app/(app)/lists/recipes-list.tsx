@@ -147,7 +147,7 @@ export default function RecipesListScreen() {
             </TouchableOpacity>
             <Text style={{ flex: 1, fontSize: 20, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Mine oppskrifter</Text>
             <TouchableOpacity
-              onPress={() => router.push('/(app)/lists/recipe')}
+              onPress={() => router.push('/(app)/lists/import')}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.primary, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 } as any}
               activeOpacity={0.8}
             >
@@ -170,7 +170,7 @@ export default function RecipesListScreen() {
               </Text>
               <TouchableOpacity
                 style={{ marginTop: 8, backgroundColor: C.primary, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 999 }}
-                onPress={() => router.push('/(app)/lists/recipe')}
+                onPress={() => router.push('/(app)/lists/import')}
                 activeOpacity={0.8}
               >
                 <Text style={{ color: C.white, fontWeight: '700', fontFamily: C.font } as any}>Importer første oppskrift</Text>

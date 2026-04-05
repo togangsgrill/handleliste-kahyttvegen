@@ -415,7 +415,7 @@ export default function ListsScreen() {
                 </TouchableOpacity>
               ))}
               <TouchableOpacity
-                onPress={() => router.push('/(app)/lists/recipe')}
+                onPress={() => router.push('/(app)/lists/import')}
                 activeOpacity={0.7}
                 style={{
                   flexDirection: 'row', alignItems: 'center', gap: 8,
@@ -441,7 +441,7 @@ export default function ListsScreen() {
           alignItems: 'center', justifyContent: 'center',
           borderWidth: 1.5, borderColor: C.outline + '55',
         }, isWeb ? ({ boxShadow: '0px 4px 16px rgba(0,54,42,0.12)' } as any) : {}]}
-        onPress={() => router.push('/(app)/lists/recipe')}
+        onPress={() => router.push('/(app)/lists/import')}
         activeOpacity={0.8}
       >
         <MaterialIcons name="restaurant-menu" size={20} color={C.primary} />
