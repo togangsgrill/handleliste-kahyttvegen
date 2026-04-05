@@ -81,5 +81,5 @@ export const SORT_OPTIONS: Array<{ mode: SortMode; label: string; icon: string }
   { mode: 'category', label: 'Kategori',    icon: 'category' },
   { mode: 'alpha',    label: 'A–Å',         icon: 'sort-by-alpha' },
   { mode: 'added',    label: 'Lagt til',    icon: 'schedule' },
-  { mode: 'manual',   label: 'Egendefinert', icon: 'drag-handle' },
+  { mode: 'manual',   label: 'Min rekkefølge', icon: 'drag-handle' },
 ];

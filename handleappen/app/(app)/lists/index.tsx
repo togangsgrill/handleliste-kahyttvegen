@@ -383,7 +383,7 @@ export default function ListsScreen() {
                   <Text style={{ fontSize: 26, fontWeight: '800', color: '#ffffff', fontFamily: C.font, lineHeight: 30 } as any}>
                     {streakWeeks > 0 ? `${streakWeeks}` : '—'}
                   </Text>
-                  <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', fontFamily: C.fontBody, marginTop: 2, textAlign: 'center' } as any}>{streakWeeks > 0 ? '🔥 uker' : 'uker'}</Text>
+                  <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', fontFamily: C.fontBody, marginTop: 2, textAlign: 'center' } as any}>aktive uker</Text>
                 </View>
               </View>
 

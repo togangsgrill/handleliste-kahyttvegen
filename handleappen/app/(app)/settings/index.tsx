@@ -325,7 +325,7 @@ export default function SettingsScreen() {
           <View style={[{ backgroundColor: C.white, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: C.outline + '33', marginBottom: 12 }, isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.04)' } as any : {}]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 } as any}>
               <MaterialIcons name="history" size={20} color={C.primary} />
-              <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Siste aktivitet</Text>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Husholdningsaktivitet</Text>
             </View>
             {activity.map((a, i) => (
               <View key={`${a.created_at}-${i}`} style={[

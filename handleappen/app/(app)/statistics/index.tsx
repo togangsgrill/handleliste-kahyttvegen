@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { router } from 'expo-router';
 
 import { useAuthStore } from '@/stores/useAuthStore';
 import { supabase } from '@/lib/supabase';
@@ -76,11 +77,27 @@ interface Stats {
   gamification: GamificationData;
 }
 
-const monthNames: Record<string, string> = {
-  '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr',
-  '05': 'Mai', '06': 'Jun', '07': 'Jul', '08': 'Aug',
-  '09': 'Sep', '10': 'Okt', '11': 'Nov', '12': 'Des',
+const fullMonthNames: Record<string, string> = {
+  '01': 'Januar', '02': 'Februar', '03': 'Mars', '04': 'April',
+  '05': 'Mai', '06': 'Juni', '07': 'Juli', '08': 'August',
+  '09': 'September', '10': 'Oktober', '11': 'November', '12': 'Desember',
 };
+
+// Formatter en ISO-måned ('2026-04') til menneskelig label relativt til nå.
+// "Denne måneden" for inneværende, fullt navn for siste 11 mnd, ellers "Mnd YY".
+function formatMonthLabel(monthKey: string): string {
+  const now = new Date();
+  const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  if (monthKey === currentKey) return 'Denne måneden';
+
+  const [yearStr, mmStr] = monthKey.split('-');
+  const year = Number(yearStr);
+  const monthNum = mmStr;
+  const monthsAgo = (now.getFullYear() - year) * 12 + (now.getMonth() + 1 - Number(mmStr));
+  const name = fullMonthNames[monthNum] ?? monthKey;
+  if (monthsAgo <= 11) return name;
+  return `${name} ${String(year).slice(2)}`;
+}
 
 export default function StatisticsScreen() {
   const insets = useSafeAreaInsets();
@@ -156,10 +173,10 @@ export default function StatisticsScreen() {
       }
     }
     const monthlySpend: MonthSpend[] = [...monthMap.entries()]
-      .sort((a, b) => a[0].localeCompare(b[0]))
+      .sort((a, b) => b[0].localeCompare(a[0])) // nyeste først
       .map(([month, { total, tripCount }]) => ({
         month,
-        label: monthNames[month.slice(5, 7)] ?? month,
+        label: formatMonthLabel(month),
         total,
         tripCount,
       }));
@@ -190,11 +207,11 @@ export default function StatisticsScreen() {
       }
     }
 
-    // Month-over-month change
+    // Month-over-month change (monthlySpend er nå sortert nyeste først)
     let monthChange: number | null = null;
     if (monthlySpend.length >= 2) {
-      const curr = monthlySpend[monthlySpend.length - 1].total;
-      const prev = monthlySpend[monthlySpend.length - 2].total;
+      const curr = monthlySpend[0].total;
+      const prev = monthlySpend[1].total;
       if (prev > 0) monthChange = Math.round(((curr - prev) / prev) * 100);
     }
 
@@ -372,7 +389,7 @@ export default function StatisticsScreen() {
                   </Text>
                   {stats.gamification.bestAvgSpendPerTrip !== null && (
                     <Text style={{ fontSize: 12, color: color.onSurfaceVariant, marginTop: 4, fontFamily: font.body } as any}>
-                      Største: {Math.round(stats.gamification.bestAvgSpendPerTrip)} kr
+                      Høyeste tur: {Math.round(stats.gamification.bestAvgSpendPerTrip)} kr
                     </Text>
                   )}
                 </View>
@@ -424,9 +441,9 @@ export default function StatisticsScreen() {
         {stats && stats.monthlySpend.length > 0 && (
           <View style={[cardStyle, { padding: 14, marginBottom: 14 }] as any}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } as any}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 } as any}>
-                <MaterialIcons name="account-balance-wallet" size={16} color={color.primary} />
-                <Text style={{ fontSize: 14, fontWeight: '700', color: color.onSurface, fontFamily: font.headline } as any}>Utgifter per måned</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 } as any}>
+                <MaterialIcons name="account-balance-wallet" size={18} color={color.primary} />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: color.onSurface, fontFamily: font.headline } as any}>Utgifter per måned</Text>
               </View>
               {stats.monthlySpend.length > 3 && (
                 <TouchableOpacity onPress={() => setShowAllMonths((v) => !v)}>
@@ -458,15 +475,15 @@ export default function StatisticsScreen() {
 
         {/* ===== STORE VISITS ===== */}
         {stats && stats.storeVisits.length > 0 && (
-          <View style={[cardStyle, { padding: 24, marginBottom: 24 }] as any}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <View style={[cardStyle, { padding: 14, marginBottom: 14 }] as any}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 } as any}>
-                <MaterialIcons name="storefront" size={22} color={color.primary} />
-                <Text style={{ fontSize: 18, fontWeight: '700', color: color.onSurface, fontFamily: font.headline } as any}>Butikker</Text>
+                <MaterialIcons name="storefront" size={18} color={color.primary} />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: color.onSurface, fontFamily: font.headline } as any}>Butikker</Text>
               </View>
               {stats.storeVisits.length > 3 && (
                 <TouchableOpacity onPress={() => setShowAllStores((v) => !v)}>
-                  <Text style={{ fontSize: 13, fontWeight: '600', color: color.primary, fontFamily: font.body } as any}>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: color.primary, fontFamily: font.body } as any}>
                     {showAllStores ? 'Vis færre' : `Se alle ${stats.storeVisits.length}`}
                   </Text>
                 </TouchableOpacity>
@@ -475,15 +492,15 @@ export default function StatisticsScreen() {
             {(showAllStores ? stats.storeVisits : stats.storeVisits.slice(0, 3)).map((s, i) => (
               <View key={s.name} style={{
                 flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-                paddingVertical: 12,
+                paddingVertical: 8,
                 borderBottomWidth: i < (showAllStores ? stats.storeVisits.length : Math.min(3, stats.storeVisits.length)) - 1 ? 1 : 0,
                 borderBottomColor: 'rgba(129,184,165,0.15)',
               } as any}>
-                <View>
-                  <Text style={{ fontSize: 15, fontWeight: '700', color: color.onSurface, fontFamily: font.body } as any}>{s.name}</Text>
-                  <Text style={{ fontSize: 12, color: color.onSurfaceVariant, fontFamily: font.body } as any}>{s.chain} · {s.visits} turer</Text>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: color.onSurface, fontFamily: font.body } as any} numberOfLines={1}>{s.name}</Text>
+                  <Text style={{ fontSize: 11, color: color.onSurfaceVariant, fontFamily: font.body } as any}>{s.chain} · {s.visits} turer</Text>
                 </View>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: color.primary, fontFamily: font.body } as any}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: color.primary, fontFamily: font.body } as any}>
                   {s.totalSpent.toFixed(0)} kr
                 </Text>
               </View>
@@ -492,9 +509,26 @@ export default function StatisticsScreen() {
         )}
 
         {stats && stats.storeVisits.length === 0 && stats.gamification.totalTrips === 0 && (
-          <View style={{ alignItems: 'center', paddingTop: 60, gap: 12 }}>
+          <View style={{ alignItems: 'center', paddingTop: 40, gap: 14 }}>
             <MaterialIcons name="insights" size={56} color={color.outlineVariant} />
-            <Text style={{ fontSize: 15, color: color.onSurfaceVariant, textAlign: 'center' }}>Begynn å handle for å se statistikk her</Text>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: color.onSurface, fontFamily: font.headline }}>Ingen innsikt ennå</Text>
+            <Text style={{ fontSize: 14, color: color.onSurfaceVariant, textAlign: 'center', maxWidth: 280, lineHeight: 20 }}>
+              Importer handlehistorikk fra Trumf, eller begynn å bruke handlelisten, så får du innsikt over tid.
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.push('/(app)/settings/trumf-import')}
+              activeOpacity={0.8}
+              style={{
+                marginTop: 8, backgroundColor: color.primary,
+                paddingHorizontal: 20, paddingVertical: 12, borderRadius: 999,
+                flexDirection: 'row', alignItems: 'center', gap: 8,
+              } as any}
+            >
+              <Text style={{ fontSize: 14 }}>🛒</Text>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: '#ffffff', fontFamily: font.body } as any}>
+                Importer fra Trumf
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>

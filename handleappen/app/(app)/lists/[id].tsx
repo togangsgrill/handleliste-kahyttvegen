@@ -485,7 +485,7 @@ export default function ListDetailScreen() {
                     onPress={() => setShowChecked(!showChecked)}
                   >
                     <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.font }}>
-                      Kjøpt ({checkedItems.length})
+                      Handlet ({checkedItems.length})
                     </Text>
                     <MaterialIcons name={showChecked ? 'expand-more' : 'chevron-right'} size={18} color={C.textSec} />
                   </TouchableOpacity>
@@ -554,7 +554,7 @@ export default function ListDetailScreen() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16, paddingHorizontal: 8 }}>
                     <MaterialIcons name="bolt" size={18} color={C.primary} />
                     <Text style={{ fontSize: 14, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1.5, color: C.primary, fontFamily: C.font }}>
-                      Smart Forslag
+                      Foreslås til deg
                     </Text>
                     {smartSuggestions.loading && (
                       <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody }}>Tenker...</Text>
@@ -601,7 +601,7 @@ export default function ListDetailScreen() {
               >
                 <MaterialIcons name="playlist-add-check" size={18} color={C.tertiary} />
                 <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.tertiary, fontFamily: C.font, flex: 1 }}>
-                  Forventet handleliste
+                  Dine vanlige varer
                 </Text>
                 <Text style={{ fontSize: 11, color: C.textSec, fontFamily: C.fontBody, marginRight: 4 }}>
                   {expectedList.expectedItems.length} varer
