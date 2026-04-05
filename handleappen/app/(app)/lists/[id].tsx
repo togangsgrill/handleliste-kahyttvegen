@@ -69,15 +69,17 @@ export default function ListDetailScreen() {
   const [userHasPickedStore, setUserHasPickedStore] = useState(false);
   const { favoriteStoreId } = useFavoriteStore();
 
-  // Forhåndsvelg mest brukte butikk hvis brukeren ikke har valgt noe manuelt
+  // Forhåndsvelg butikk: først listen sin egen default, deretter husholdningens favoritt
   useEffect(() => {
-    if (userHasPickedStore || selectedStore || !favoriteStoreId) return;
+    if (userHasPickedStore || selectedStore) return;
+    const targetStoreId = listDefaultStoreId ?? favoriteStoreId;
+    if (!targetStoreId) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabase
         .from('store_locations' as any)
         .select('id, name, chain, address, lat, lng')
-        .eq('id', favoriteStoreId)
+        .eq('id', targetStoreId)
         .maybeSingle();
       if (cancelled || !data) return;
       const { getChainInfo } = await import('@/constants/chains');
@@ -93,12 +95,20 @@ export default function ListDetailScreen() {
       });
     })();
     return () => { cancelled = true; };
-  }, [favoriteStoreId, userHasPickedStore, selectedStore]);
+  }, [listDefaultStoreId, favoriteStoreId, userHasPickedStore, selectedStore]);
 
-  const handleStorePick = useCallback((store: StoreWithDistance | null) => {
+  // Når brukeren velger butikk: lagre som listens default, slik at neste gang
+  // listen åpnes velges samme butikk automatisk.
+  const handleStorePick = useCallback(async (store: StoreWithDistance | null) => {
     setUserHasPickedStore(true);
     setSelectedStore(store);
-  }, []);
+    if (id) {
+      await supabase.from('shopping_lists')
+        .update({ default_store_location_id: store?.id ?? null } as any)
+        .eq('id', id);
+      setListDefaultStoreId(store?.id ?? null);
+    }
+  }, [id]);
 
   const [showCategoryOrder, setShowCategoryOrder] = useState(false);
   const categoryOrder = useCategoryOrder(selectedStore?.id ?? null);
@@ -134,10 +144,15 @@ export default function ListDetailScreen() {
   const [listName, setListName] = useState('');
   const householdId = useAuthStore((s) => s.householdId);
 
+  const [listDefaultStoreId, setListDefaultStoreId] = useState<string | null>(null);
+
   useEffect(() => {
     if (!id) return;
-    supabase.from('shopping_lists').select('name').eq('id', id).single().then(({ data }) => {
-      if (data) setListName(data.name);
+    supabase.from('shopping_lists').select('name, default_store_location_id').eq('id', id).single().then(({ data }) => {
+      if (data) {
+        setListName((data as any).name);
+        setListDefaultStoreId((data as any).default_store_location_id ?? null);
+      }
     });
   }, [id]);
 
