@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { Database } from '@/types/database';
@@ -33,11 +33,19 @@ export function useListItems(listId: string | undefined) {
     setIsLoading(false);
   }, [listId]);
 
+  const fetchItemsRef = useRef(fetchItems);
+  useEffect(() => {
+    fetchItemsRef.current = fetchItems;
+  }, [fetchItems]);
+
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
 
-  // Realtime subscription
+  // Realtime subscription — avhenger KUN av listId for å unngå
+  // at kanalen rives ned og gjenopprettes ved hver re-render (som kan
+  // trigge `cannot add postgres_changes callbacks after subscribe()`
+  // når Supabase-klienten gjenbruker samme kanalnavn).
   useEffect(() => {
     if (!listId) return;
 
@@ -52,7 +60,7 @@ export function useListItems(listId: string | undefined) {
           filter: `list_id=eq.${listId}`,
         },
         () => {
-          fetchItems();
+          fetchItemsRef.current();
         }
       )
       .subscribe();
@@ -60,7 +68,7 @@ export function useListItems(listId: string | undefined) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [listId, fetchItems]);
+  }, [listId]);
 
   const addItem = async (
     name: string,

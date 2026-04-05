@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { Database } from '@/types/database';
@@ -32,6 +32,11 @@ export function useShoppingLists() {
     setIsLoading(false);
   }, [householdId]);
 
+  const fetchListsRef = useRef(fetchLists);
+  useEffect(() => {
+    fetchListsRef.current = fetchLists;
+  }, [fetchLists]);
+
   useEffect(() => {
     if (householdId) {
       setIsLoading(true);
@@ -39,7 +44,10 @@ export function useShoppingLists() {
     }
   }, [householdId, fetchLists]);
 
-  // Realtime subscription
+  // Realtime subscription — avhenger KUN av householdId for å unngå
+  // at kanalen rives ned og gjenopprettes ved hver re-render (som kan
+  // trigge `cannot add postgres_changes callbacks after subscribe()`
+  // når Supabase-klienten gjenbruker samme kanalnavn).
   useEffect(() => {
     if (!householdId) return;
 
@@ -54,7 +62,7 @@ export function useShoppingLists() {
           filter: `household_id=eq.${householdId}`,
         },
         () => {
-          fetchLists();
+          fetchListsRef.current();
         }
       )
       .subscribe();
@@ -62,7 +70,7 @@ export function useShoppingLists() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [householdId, fetchLists]);
+  }, [householdId]);
 
   const createList = async (name: string) => {
     const userId = useAuthStore.getState().userId;
