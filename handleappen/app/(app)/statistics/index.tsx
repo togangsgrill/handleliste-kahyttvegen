@@ -312,7 +312,7 @@ export default function StatisticsScreen() {
           width: '100%' as any,
         }}
       >
-        <Text style={{ fontSize: 24, fontWeight: '800', color: color.onSurface, letterSpacing: -0.5, fontFamily: font.headline }}>Oversikt</Text>
+        <Text style={{ fontSize: 24, fontWeight: '800', color: color.onSurface, letterSpacing: -0.5, fontFamily: font.headline }}>Innsikt</Text>
         <Text style={{ fontSize: 13, color: color.onSurfaceVariant, marginTop: 2, marginBottom: 16, fontFamily: font.body }}>Din handlevane og forbruk</Text>
 
         {/* ===== GAMIFICATION HERO ===== */}
@@ -481,7 +481,7 @@ export default function StatisticsScreen() {
               } as any}>
                 <View>
                   <Text style={{ fontSize: 15, fontWeight: '700', color: color.onSurface, fontFamily: font.body } as any}>{s.name}</Text>
-                  <Text style={{ fontSize: 12, color: color.onSurfaceVariant, fontFamily: font.body } as any}>{s.chain} · {s.visits} besøk</Text>
+                  <Text style={{ fontSize: 12, color: color.onSurfaceVariant, fontFamily: font.body } as any}>{s.chain} · {s.visits} turer</Text>
                 </View>
                 <Text style={{ fontSize: 15, fontWeight: '700', color: color.primary, fontFamily: font.body } as any}>
                   {s.totalSpent.toFixed(0)} kr

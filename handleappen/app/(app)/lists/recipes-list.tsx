@@ -424,7 +424,7 @@ export default function RecipesListScreen() {
                         {ingredients.some((i) => i.is_staple && !i.alreadyOnList) && (
                           <View style={{ marginBottom: 16 }}>
                             <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 8 } as any}>
-                              Basisvarer (har du trolig hjemme)
+                              Basisvarer — har du dette hjemme?
                             </Text>
                             {ingredients.filter((i) => i.is_staple && !i.alreadyOnList).map((ing) => (
                               <IngredientRow
