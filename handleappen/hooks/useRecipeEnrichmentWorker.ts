@@ -29,31 +29,49 @@ export function useRecipeEnrichmentWorker() {
   const stoppedRef = useRef(false);
 
   useEffect(() => {
+    console.log('[enrichment-worker] mount, householdId=', householdId);
     if (!householdId) return;
     stoppedRef.current = false;
 
     const run = async () => {
-      if (runningRef.current) return;
+      if (runningRef.current) {
+        console.log('[enrichment-worker] allerede kjørende, hopper over');
+        return;
+      }
       runningRef.current = true;
+      console.log('[enrichment-worker] starter kjøring for household', householdId);
 
       try {
         // Crash recovery: frigjør oppskrifter som har vært 'loading' i mer enn 5 min
-        await supabase.rpc('reset_stale_enrichments', { p_household_id: householdId });
+        const resetResult = await supabase.rpc('reset_stale_enrichments', { p_household_id: householdId });
+        console.log('[enrichment-worker] reset_stale_enrichments:', resetResult);
 
+        let iter = 0;
         while (!stoppedRef.current) {
+          iter++;
+          console.log(`[enrichment-worker] iter ${iter}: kaller claim_next_enrichment`);
           const { data, error } = await supabase.rpc('claim_next_enrichment', {
             p_household_id: householdId,
           });
 
-          if (error || !data || data.length === 0) break;
+          if (error) {
+            console.error('[enrichment-worker] claim_next_enrichment feil:', error);
+            break;
+          }
+          console.log(`[enrichment-worker] iter ${iter}: data=`, data ? `array(${(data as any[])?.length ?? 0})` : data);
+          if (!data || (data as any[]).length === 0) {
+            console.log('[enrichment-worker] ingen flere pending, stopper');
+            break;
+          }
 
-          const job = data[0] as {
+          const job = (data as any[])[0] as {
             recipe_id: string;
             recipe_name: string;
             job_id: string;
             file_base64: string;
             media_type: string;
           };
+          console.log(`[enrichment-worker] behandler "${job.recipe_name}" (${job.recipe_id})`);
 
           await processOne(job);
 
@@ -64,6 +82,7 @@ export function useRecipeEnrichmentWorker() {
         console.error('[enrichment-worker] uventet feil:', e);
       } finally {
         runningRef.current = false;
+        console.log('[enrichment-worker] kjøring ferdig');
       }
     };
 
