@@ -182,7 +182,24 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
               {(item as any)?.image_url && (
                 <Image
                   source={{ uri: (item as any).image_url }}
-                  style={{ width: 64, height: 64, borderRadius: 12, backgroundColor: C.low }}
+                  style={[
+                    {
+                      width: 64,
+                      height: 64,
+                      borderRadius: 12,
+                      backgroundColor: '#ffffff',
+                      padding: 8,
+                    },
+                    Platform.OS === 'web'
+                      ? ({ boxShadow: '0px 2px 8px rgba(0,54,42,0.12)' } as any)
+                      : {
+                          shadowColor: '#00362a',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.12,
+                          shadowRadius: 8,
+                          elevation: 3,
+                        },
+                  ]}
                   resizeMode="contain"
                 />
               )}
