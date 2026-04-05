@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Text, TouchableOpacity, View, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
+import { Text, TouchableOpacity, View, ScrollView, Platform, Modal, ActivityIndicator, Alert } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -70,6 +70,7 @@ export default function RecipesListScreen() {
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [addingToList, setAddingToList] = useState(false);
   const [addedCount, setAddedCount] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchRecipes = useCallback(async () => {
     if (!householdId) return;
@@ -104,6 +105,38 @@ export default function RecipesListScreen() {
       .order('created_at', { ascending: true });
     setIngredients(data ?? []);
     setLoadingIngredients(false);
+  };
+
+  const handleDeleteRecipe = async () => {
+    if (!selectedRecipe) return;
+
+    const confirmed = isWeb
+      ? typeof window !== 'undefined' && window.confirm(`Slette oppskriften "${selectedRecipe.name}"? Dette kan ikke angres.`)
+      : await new Promise<boolean>((resolve) => {
+          Alert.alert(
+            'Slette oppskrift?',
+            `"${selectedRecipe.name}" vil bli slettet permanent.`,
+            [
+              { text: 'Avbryt', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Slett', style: 'destructive', onPress: () => resolve(true) },
+            ]
+          );
+        });
+
+    if (!confirmed) return;
+
+    setDeleting(true);
+    const { error } = await supabase.from('recipes').delete().eq('id', selectedRecipe.id);
+    setDeleting(false);
+
+    if (error) {
+      if (isWeb) window.alert(`Kunne ikke slette: ${error.message}`);
+      else Alert.alert('Feil', `Kunne ikke slette: ${error.message}`);
+      return;
+    }
+
+    setRecipes((prev) => prev.filter((r) => r.id !== selectedRecipe.id));
+    setSelectedRecipe(null);
   };
 
   const handleAddToList = async () => {
@@ -314,6 +347,28 @@ export default function RecipesListScreen() {
                         </TouchableOpacity>
                       </>
                     )}
+
+                    {/* Slett oppskrift */}
+                    <TouchableOpacity
+                      style={{
+                        marginTop: 16, paddingVertical: 14, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
+                        flexDirection: 'row', gap: 8, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca',
+                      } as any}
+                      onPress={handleDeleteRecipe}
+                      disabled={deleting}
+                      activeOpacity={0.7}
+                    >
+                      {deleting ? (
+                        <ActivityIndicator color="#b91c1c" size="small" />
+                      ) : (
+                        <>
+                          <MaterialIcons name="delete-outline" size={18} color="#b91c1c" />
+                          <Text style={{ color: '#b91c1c', fontSize: 14, fontWeight: '700', fontFamily: C.fontBody } as any}>
+                            Slett oppskrift
+                          </Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
                   </>
                 )}
               </ScrollView>
