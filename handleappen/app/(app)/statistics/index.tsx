@@ -301,53 +301,38 @@ export default function StatisticsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: color.bg }}>
-      {/* Header */}
-      {isWeb && <View style={{ height: 'calc(58px + env(safe-area-inset-top, 0px))' } as any} />}
-      <View style={{
-        backgroundColor: 'rgba(236,253,245,0.92)', zIndex: 40,
-        ...(isWeb ? { paddingTop: 'env(safe-area-inset-top, 0px)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'fixed', top: 0, left: 0, right: 0 } as any : { paddingTop: insets.top + 8 }),
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 14 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <MaterialIcons name="shopping-basket" size={22} color={color.primary} />
-            <Text style={{ fontSize: 20, fontWeight: '800', color: color.onSurface, letterSpacing: -0.5, fontFamily: font.headline }}>Handleliste</Text>
-          </View>
-        </View>
-      </View>
-
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 16,
-          paddingTop: 28,
-          paddingBottom: 160,
+          paddingTop: insets.top + 12,
+          paddingBottom: 120,
           maxWidth: 720,
           alignSelf: 'center' as any,
           width: '100%' as any,
         }}
       >
-        <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: color.outline, marginBottom: 8, textTransform: 'uppercase', fontFamily: font.body }}>Statistikk</Text>
-        <Text style={{ fontSize: 28, fontWeight: '800', color: color.onSurface, letterSpacing: -0.5, fontFamily: font.headline }}>Oversikt</Text>
-        <Text style={{ fontSize: 16, color: color.onSurfaceVariant, marginTop: 6, marginBottom: 24, fontFamily: font.body }}>Din handleprofil</Text>
+        <Text style={{ fontSize: 24, fontWeight: '800', color: color.onSurface, letterSpacing: -0.5, fontFamily: font.headline }}>Oversikt</Text>
+        <Text style={{ fontSize: 13, color: color.onSurfaceVariant, marginTop: 2, marginBottom: 16, fontFamily: font.body }}>Din handleprofil</Text>
 
         {/* ===== GAMIFICATION HERO ===== */}
         {stats && stats.gamification.totalTrips > 0 && stats.gamification.daysSinceLast !== null && (
-          <View style={{ marginBottom: 28, gap: 10 } as any}>
+          <View style={{ marginBottom: 16, gap: 8 } as any}>
 
             {/* Hovedkort: dager siden sist */}
             <View style={{
-              borderRadius: 16, padding: 28,
+              borderRadius: 14, padding: 16,
               backgroundColor: color.surfaceContainerLowest,
               borderWidth: 1, borderColor: color.outlineVariant + '33',
               ...(isWeb ? { boxShadow: '0px 10px 30px rgba(0,54,42,0.06)' } : {}),
             } as any}>
-              <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 2, color: color.onSurfaceVariant, marginBottom: 4, fontFamily: font.body } as any}>
+              <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, color: color.onSurfaceVariant, marginBottom: 2, fontFamily: font.body } as any}>
                 DAGER SIDEN SIST
               </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginBottom: 8 } as any}>
-                <Text style={{ fontSize: 72, fontWeight: '800', color: color.primary, lineHeight: 80, fontFamily: font.headline } as any}>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6, marginBottom: 6 } as any}>
+                <Text style={{ fontSize: 44, fontWeight: '800', color: color.primary, lineHeight: 48, fontFamily: font.headline } as any}>
                   {stats.gamification.daysSinceLast}
                 </Text>
-                <Text style={{ fontSize: 20, fontWeight: '600', color: color.onSurfaceVariant, marginBottom: 10, fontFamily: font.body } as any}>
+                <Text style={{ fontSize: 15, fontWeight: '600', color: color.onSurfaceVariant, fontFamily: font.body } as any}>
                   dager
                 </Text>
               </View>

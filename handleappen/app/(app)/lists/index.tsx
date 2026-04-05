@@ -65,21 +65,21 @@ const ListCard = memo(function ListCard({ item, itemCount, onDelete }: {
     <TouchableOpacity
       style={[{
         backgroundColor: C.white,
-        borderRadius: 16, padding: 16,
-        flexDirection: 'row', alignItems: 'center', gap: 14,
+        borderRadius: 14, padding: 12,
+        flexDirection: 'row', alignItems: 'center', gap: 12,
       }, isWeb ? ({ boxShadow: '0px 2px 10px rgba(0,54,42,0.06)' } as any) : {}]}
       onPress={() => router.push(`/(app)/lists/${item.id}`)}
       activeOpacity={0.85}
     >
       {/* Ikon */}
-      <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: bg, justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
-        <MaterialIcons name={icon} size={22} color={C.onPrimaryFixed} />
+      <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: bg, justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+        <MaterialIcons name={icon} size={20} color={C.onPrimaryFixed} />
       </View>
 
       {/* Midten: navn + info + progress */}
       <View style={{ flex: 1, minWidth: 0 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 } as any}>
-          <Text style={{ fontSize: 16, fontWeight: '700', color: C.text, fontFamily: C.font, flexShrink: 1 } as any} numberOfLines={1}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 1 } as any}>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.font, flexShrink: 1 } as any} numberOfLines={1}>
             {item.name}
           </Text>
           {storeHint && (
@@ -89,7 +89,7 @@ const ListCard = memo(function ListCard({ item, itemCount, onDelete }: {
           )}
         </View>
 
-        <Text style={{ fontSize: 14, color: C.textSec, fontFamily: C.fontBody, marginBottom: total > 0 ? 8 : 0 } as any}>
+        <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody, marginBottom: total > 0 ? 6 : 0 } as any}>
           {total === 0
             ? 'Tom liste'
             : isComplete
@@ -221,42 +221,27 @@ export default function ListsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      {/* Header */}
-      {isWeb && <View style={{ height: 'calc(58px + env(safe-area-inset-top, 0px))' } as any} />}
-      <View style={{
-        backgroundColor: 'rgba(236,253,245,0.92)', zIndex: 40,
-        ...(isWeb ? { paddingTop: 'env(safe-area-inset-top, 0px)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'fixed', top: 0, left: 0, right: 0 } as any : { paddingTop: insets.top + 8 }),
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 14 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 } as any}>
-            <MaterialIcons name="shopping-basket" size={22} color={C.primary} />
-            <Text style={{ fontSize: 20, fontWeight: '800', color: C.text, fontFamily: C.font, letterSpacing: -0.5 } as any}>Handleliste</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 } as any}>
-            <TouchableOpacity
-              style={{ padding: 8, borderRadius: 9999 }}
-              activeOpacity={0.7}
-              onPress={() => router.push('/(app)/lists/recipes-list')}
-            >
-              <MaterialIcons name="restaurant-menu" size={22} color={C.textSec} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: 120, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 28, paddingBottom: 160, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
-
-        {/* Hilsen */}
-        <View style={{ marginBottom: 32 }}>
-          <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: C.textSec, marginBottom: 8, textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Lister</Text>
-          <Text style={{ fontSize: 28, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>
-            {greeting} 👋
-          </Text>
-          <Text style={{ fontSize: 16, color: C.textSec, marginTop: 6, fontFamily: C.fontBody } as any}>
-            {lists.length > 0
-              ? `${lists.length} liste${lists.length > 1 ? 'r' : ''} klar${lists.length > 1 ? 'e' : ''}`
-              : 'Opprett din første handleliste'}
-          </Text>
+        {/* Hilsen + snarvei til oppskrifter */}
+        <View style={{ marginBottom: 18, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 24, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>
+              {greeting} 👋
+            </Text>
+            <Text style={{ fontSize: 13, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>
+              {lists.length > 0
+                ? `${lists.length} liste${lists.length > 1 ? 'r' : ''} klar${lists.length > 1 ? 'e' : ''}`
+                : 'Opprett din første handleliste'}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={{ padding: 8, borderRadius: 9999 }}
+            activeOpacity={0.7}
+            onPress={() => router.push('/(app)/lists/recipes-list')}
+          >
+            <MaterialIcons name="restaurant-menu" size={22} color={C.textSec} />
+          </TouchableOpacity>
         </View>
 
         {/* Lister */}
@@ -279,7 +264,7 @@ export default function ListsScreen() {
             <Text style={{ fontSize: 14, color: C.textSec, fontFamily: C.fontBody } as any}>{t('lists.empty_subtitle')}</Text>
           </View>
         ) : (
-          <View style={{ gap: 10, marginBottom: 32 } as any}>
+          <View style={{ gap: 8, marginBottom: 16 } as any}>
             {lists.map((item, i) => (
               <ListCard key={item.id} item={item} itemCount={itemCounts.get(item.id)} isFirst={i === 0} onDelete={setDeleteConfirmList} />
             ))}
@@ -291,17 +276,17 @@ export default function ListsScreen() {
           onPress={() => router.push('/(app)/lists/meal-plan')}
           activeOpacity={0.8}
           style={[{
-            backgroundColor: C.white, borderRadius: 20, padding: 16, marginBottom: 24,
-            flexDirection: 'row', alignItems: 'center', gap: 14,
+            backgroundColor: C.white, borderRadius: 16, padding: 12, marginBottom: 14,
+            flexDirection: 'row', alignItems: 'center', gap: 12,
             borderWidth: 1, borderColor: C.outline + '22',
           }, isWeb ? ({ boxShadow: '0px 4px 12px rgba(0,54,42,0.04)' } as any) : {}]}
         >
-          <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: C.low, alignItems: 'center', justifyContent: 'center' }}>
-            <MaterialIcons name="restaurant-menu" size={22} color={C.primary} />
+          <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: C.low, alignItems: 'center', justifyContent: 'center' }}>
+            <MaterialIcons name="restaurant-menu" size={20} color={C.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>Ukesmeny</Text>
-            <Text style={{ fontSize: 12, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>Planlegg middager og legg ingredienser i liste</Text>
+            <Text style={{ fontSize: 14, fontWeight: '700', color: C.text, fontFamily: C.fontBody } as any}>Ukesmeny</Text>
+            <Text style={{ fontSize: 11, color: C.textSec, marginTop: 1, fontFamily: C.fontBody } as any}>Planlegg middager og legg ingredienser i liste</Text>
           </View>
           <MaterialIcons name="chevron-right" size={18} color={C.outline} />
         </TouchableOpacity>
@@ -312,13 +297,13 @@ export default function ListsScreen() {
             onPress={() => router.push('/(app)/statistics')}
             activeOpacity={0.85}
             style={[{
-              borderRadius: 22, marginBottom: 24, overflow: 'hidden',
+              borderRadius: 18, marginBottom: 14, overflow: 'hidden',
             }, isWeb ? ({ boxShadow: '0px 8px 24px rgba(0,54,42,0.10)' } as any) : {}]}
           >
             {/* Bakgrunn */}
             <View style={{
               backgroundColor: C.primary,
-              padding: 20,
+              padding: 16,
               ...(isWeb ? { background: 'linear-gradient(135deg, #006947 0%, #00a66e 100%)' } as any : {}),
             }}>
               {/* Topplinje */}
@@ -386,8 +371,8 @@ export default function ListsScreen() {
 
         {/* Oppskrifter */}
         {recipes.length > 0 && (
-          <View style={{ marginBottom: 40 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <View style={{ marginBottom: 20 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Oppskrifter</Text>
               <TouchableOpacity onPress={() => router.push('/(app)/lists/recipes-list')} activeOpacity={0.7}>
                 <Text style={{ fontSize: 13, fontWeight: '600', color: C.primary, fontFamily: C.fontBody } as any}>Se alle</Text>
@@ -435,8 +420,8 @@ export default function ListsScreen() {
       {/* Mini-FAB — importer oppskrift */}
       <TouchableOpacity
         style={[{
-          position: 'absolute', bottom: 96 + insets.bottom + 72, right: 24, zIndex: 50,
-          width: 44, height: 44, borderRadius: 22,
+          position: 'absolute', bottom: 78 + insets.bottom + 60, right: 18, zIndex: 50,
+          width: 40, height: 40, borderRadius: 20,
           backgroundColor: C.white,
           alignItems: 'center', justifyContent: 'center',
           borderWidth: 1.5, borderColor: C.outline + '55',
@@ -444,21 +429,21 @@ export default function ListsScreen() {
         onPress={() => router.push('/(app)/lists/import')}
         activeOpacity={0.8}
       >
-        <MaterialIcons name="restaurant-menu" size={20} color={C.primary} />
+        <MaterialIcons name="restaurant-menu" size={18} color={C.primary} />
       </TouchableOpacity>
 
       {/* FAB — ny liste */}
       <TouchableOpacity
         style={{
-          position: 'absolute', bottom: 96 + insets.bottom, right: 24, zIndex: 50,
-          paddingVertical: 20, paddingHorizontal: 20, borderRadius: 9999,
+          position: 'absolute', bottom: 78 + insets.bottom, right: 18, zIndex: 50,
+          paddingVertical: 16, paddingHorizontal: 16, borderRadius: 9999,
           backgroundColor: C.primary,
           ...(isWeb ? { background: 'linear-gradient(135deg, #006947, #00feb2)', boxShadow: '0px 20px 50px rgba(0,105,71,0.3)' } as any : {}),
         } as any}
         onPress={() => setShowModal(true)}
         activeOpacity={0.8}
       >
-        <MaterialIcons name="add" size={28} color="#ffffff" />
+        <MaterialIcons name="add" size={26} color="#ffffff" />
       </TouchableOpacity>
 
       {/* Slett liste-dialog */}

@@ -171,36 +171,21 @@ export default function SettingsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      {/* Header */}
-      {isWeb && <View style={{ height: 'calc(58px + env(safe-area-inset-top, 0px))' } as any} />}
-      <View style={{
-        backgroundColor: 'rgba(236,253,245,0.92)', zIndex: 40,
-        ...(isWeb ? { paddingTop: 'env(safe-area-inset-top, 0px)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'fixed', top: 0, left: 0, right: 0 } as any : { paddingTop: insets.top + 8 }),
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 14 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 } as any}>
-            <MaterialIcons name="shopping-basket" size={22} color={C.primary} />
-            <Text style={{ fontSize: 20, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>Handleliste</Text>
-          </View>
-        </View>
-      </View>
-
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 28, paddingBottom: 160, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: 120, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
 
         {/* Title + change button */}
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 } as any}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 } as any}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: C.textSec, marginBottom: 8, textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Innstillinger</Text>
-            <Text style={{ fontSize: 28, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>Innstillinger</Text>
-            <Text style={{ fontSize: 16, color: C.textSec, marginTop: 6, fontFamily: C.fontBody } as any}>{householdName || 'Laster...'}</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>Innstillinger</Text>
+            <Text style={{ fontSize: 13, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>{householdName || 'Laster...'}</Text>
           </View>
           <TouchableOpacity
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.white, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 9999, borderWidth: 1, borderColor: C.outline + '4D', marginTop: 8 } as any}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.white, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 9999, borderWidth: 1, borderColor: C.outline + '4D' } as any}
             onPress={() => setShowChangeModal(true)}
             activeOpacity={0.8}
           >
-            <MaterialIcons name="swap-horiz" size={16} color={C.primary} />
-            <Text style={{ fontSize: 13, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>Bytt</Text>
+            <MaterialIcons name="swap-horiz" size={15} color={C.primary} />
+            <Text style={{ fontSize: 12, fontWeight: '700', color: C.primary, fontFamily: C.fontBody } as any}>Bytt</Text>
           </TouchableOpacity>
         </View>
 

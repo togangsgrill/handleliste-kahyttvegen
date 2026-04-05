@@ -259,24 +259,11 @@ export default function HistoryScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      {/* Header */}
-      {isWeb && <View style={{ height: 'calc(58px + env(safe-area-inset-top, 0px))' } as any} />}
-      <View style={{
-        backgroundColor: 'rgba(236,253,245,0.92)', zIndex: 40,
-        ...(isWeb ? { paddingTop: 'env(safe-area-inset-top, 0px)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'fixed', top: 0, left: 0, right: 0 } as any : { paddingTop: insets.top + 8 }),
-      }}>
-        <View style={{ paddingHorizontal: 24, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 10 } as any}>
-          <MaterialIcons name="shopping-basket" size={22} color={C.primary} />
-          <Text style={{ fontSize: 20, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>Handleliste</Text>
-        </View>
-      </View>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: 120, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 28, paddingBottom: 160, maxWidth: 720, alignSelf: 'center' as any, width: '100%' as any }}>
-
-        <View style={{ marginBottom: 24 }}>
-          <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 3, color: C.textSec, marginBottom: 8, textTransform: 'uppercase', fontFamily: C.fontBody } as any}>Historikk</Text>
-          <Text style={{ fontSize: 28, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>Handlehistorikk</Text>
-          <Text style={{ fontSize: 16, color: C.textSec, marginTop: 6, fontFamily: C.fontBody } as any}>Dine handleturer</Text>
+        <View style={{ marginBottom: 14 }}>
+          <Text style={{ fontSize: 24, fontWeight: '800', color: C.text, letterSpacing: -0.5, fontFamily: C.font } as any}>Handlehistorikk</Text>
+          <Text style={{ fontSize: 13, color: C.textSec, marginTop: 2, fontFamily: C.fontBody } as any}>Dine handleturer</Text>
         </View>
 
         {/* Pending visit */}

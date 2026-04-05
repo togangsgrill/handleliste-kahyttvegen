@@ -127,7 +127,7 @@ export default function RootLayout() {
         </Stack>
         <ToastOverlay />
       </View>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" translucent backgroundColor="transparent" />
     </ThemeProvider>
   );
 }

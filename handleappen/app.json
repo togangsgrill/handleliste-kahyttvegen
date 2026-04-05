@@ -24,7 +24,7 @@
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "themeColor": "#006947",
+      "themeColor": "#d8fff0",
       "backgroundColor": "#d8fff0",
       "shortName": "Handleliste",
       "description": "Familiens handleliste"

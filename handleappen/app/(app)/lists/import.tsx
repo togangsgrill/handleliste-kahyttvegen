@@ -149,23 +149,23 @@ export default function ImportScreen() {
   const renderInput = () => (
     <>
       {/* Tab-velger: Bilde / PDF / Tekst */}
-      <View style={{ flexDirection: 'row', backgroundColor: C.low, borderRadius: 12, padding: 4, marginBottom: 20 }}>
+      <View style={{ flexDirection: 'row', backgroundColor: C.low, borderRadius: 10, padding: 3, marginBottom: 14 }}>
         {([
-          { mode: 'image' as InputMode, label: '📷  Bilde' },
-          { mode: 'pdf' as InputMode, label: '📄  PDF / Ukesmeny' },
-          { mode: 'text' as InputMode, label: '📝  Tekst' },
+          { mode: 'image' as InputMode, label: '📷 Bilde' },
+          { mode: 'pdf' as InputMode, label: '📄 PDF' },
+          { mode: 'text' as InputMode, label: '📝 Tekst' },
         ]).map(({ mode, label }) => (
           <TouchableOpacity
             key={mode}
             onPress={() => setInputMode(mode)}
             activeOpacity={0.7}
             style={{
-              flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center',
+              flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center',
               backgroundColor: inputMode === mode ? C.white : 'transparent',
               ...(isWeb && inputMode === mode ? ({ boxShadow: '0px 2px 8px rgba(0,54,42,0.08)' } as any) : {}),
             }}
           >
-            <Text style={{ fontSize: 13, fontWeight: '700', color: inputMode === mode ? C.primary : C.textSec, fontFamily: C.fontBody } as any}>
+            <Text style={{ fontSize: 12, fontWeight: '700', color: inputMode === mode ? C.primary : C.textSec, fontFamily: C.fontBody } as any} numberOfLines={1}>
               {label}
             </Text>
           </TouchableOpacity>
@@ -189,10 +189,10 @@ export default function ImportScreen() {
           onPress={loading ? undefined : openFilePicker}
           activeOpacity={loading ? 1 : 0.8}
           style={[{
-            borderRadius: 20, borderWidth: 2,
+            borderRadius: 16, borderWidth: 2,
             borderColor: loading ? C.primary : imageUri ? C.primary : C.outline + '66',
             borderStyle: imageUri ? 'solid' : 'dashed',
-            overflow: 'hidden', minHeight: 180,
+            overflow: 'hidden', minHeight: 130,
             alignItems: 'center', justifyContent: 'center',
             backgroundColor: loading ? C.low : imageUri ? 'transparent' : C.low + '88',
           } as any]}
@@ -222,8 +222,8 @@ export default function ImportScreen() {
           ) : imageUri ? (
             <Image source={{ uri: imageUri }} style={{ width: '100%', height: 240 } as any} resizeMode="cover" />
           ) : (
-            <View style={{ alignItems: 'center', gap: 10, padding: 24 } as any}>
-              <MaterialIcons name={inputMode === 'pdf' ? 'upload-file' : 'add-photo-alternate'} size={44} color={C.outline} />
+            <View style={{ alignItems: 'center', gap: 8, padding: 18 } as any}>
+              <MaterialIcons name={inputMode === 'pdf' ? 'upload-file' : 'add-photo-alternate'} size={36} color={C.outline} />
               <Text style={{ fontSize: 15, fontWeight: '600', color: C.textSec, fontFamily: C.fontBody, textAlign: 'center' } as any}>
                 {inputMode === 'pdf' ? (
                   <>Trykk for å velge fil{'\n'}
@@ -587,27 +587,24 @@ export default function ImportScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         {/* Header */}
-        <View style={{
-          backgroundColor: 'rgba(236,253,245,0.8)', paddingTop: insets.top + 8, zIndex: 40,
-          ...(isWeb ? { backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'sticky', top: 0 } as any : {}),
-        }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 14, gap: 12 } as any}>
+        <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 } as any}>
             <TouchableOpacity
               onPress={handleBack}
-              style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(0,105,71,0.08)', alignItems: 'center', justifyContent: 'center' }}
+              style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(0,105,71,0.08)', alignItems: 'center', justifyContent: 'center' }}
               activeOpacity={0.7}
             >
-              <MaterialIcons name="arrow-back" size={22} color={C.primary} />
+              <MaterialIcons name="arrow-back" size={20} color={C.primary} />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>{stepTitles[step]}</Text>
+              <Text style={{ fontSize: 17, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>{stepTitles[step]}</Text>
             </View>
-            <MaterialIcons name="restaurant-menu" size={20} color={C.primary} />
+            <MaterialIcons name="restaurant-menu" size={18} color={C.primary} />
           </View>
 
           {/* Step indicator */}
           {step !== 'done' && (
-            <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 24, paddingBottom: 12 } as any}>
+            <View style={{ flexDirection: 'row', gap: 4, marginTop: 10 } as any}>
               {allSteps.map((s, i) => (
                 <View key={s} style={{
                   height: 3, borderRadius: 2, flex: 1,
@@ -621,11 +618,11 @@ export default function ImportScreen() {
         </View>
 
         <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 160, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 120, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}
           keyboardShouldPersistTaps="handled"
         >
           {stepSubtitles[step] ? (
-            <Text style={{ fontSize: 14, color: C.textSec, fontFamily: C.fontBody, marginBottom: 24 } as any}>
+            <Text style={{ fontSize: 13, color: C.textSec, fontFamily: C.fontBody, marginBottom: 14 } as any}>
               {stepSubtitles[step]}
             </Text>
           ) : null}

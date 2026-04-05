@@ -266,31 +266,28 @@ export default function RecipesListScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         {/* Header */}
-        <View style={{
-          backgroundColor: 'rgba(236,253,245,0.8)', paddingTop: insets.top + 8, zIndex: 40,
-          ...(isWeb ? { backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', boxShadow: '0px 10px 30px rgba(0,54,42,0.06)', position: 'sticky', top: 0 } as any : {}),
-        }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 14, gap: 12 } as any}>
+        <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 } as any}>
             <TouchableOpacity
               onPress={() => router.back()}
-              style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(0,105,71,0.08)', alignItems: 'center', justifyContent: 'center' }}
+              style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(0,105,71,0.08)', alignItems: 'center', justifyContent: 'center' }}
               activeOpacity={0.7}
             >
-              <MaterialIcons name="arrow-back" size={22} color={C.primary} />
+              <MaterialIcons name="arrow-back" size={20} color={C.primary} />
             </TouchableOpacity>
-            <Text style={{ flex: 1, fontSize: 20, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Mine oppskrifter</Text>
+            <Text style={{ flex: 1, fontSize: 18, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Mine oppskrifter</Text>
             <TouchableOpacity
               onPress={() => router.push('/(app)/lists/import')}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.primary, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 } as any}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.primary, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999 } as any}
               activeOpacity={0.8}
             >
-              <MaterialIcons name="add" size={16} color={C.white} />
-              <Text style={{ fontSize: 13, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>Importer</Text>
+              <MaterialIcons name="add" size={15} color={C.white} />
+              <Text style={{ fontSize: 12, fontWeight: '700', color: C.white, fontFamily: C.fontBody } as any}>Importer</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 120, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 120, maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any }}>
 
           {loading ? (
             <ActivityIndicator color={C.primary} style={{ marginTop: 60 }} />
@@ -310,11 +307,11 @@ export default function RecipesListScreen() {
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={{ gap: 12 }}>
+            <View style={{ gap: 8 }}>
               {recipes.map((recipe) => (
                 <RecipeCard
                   key={recipe.id}
-                  variant="card"
+                  variant="compact"
                   name={recipe.name}
                   description={recipe.description}
                   servings={recipe.base_servings}

@@ -9,10 +9,10 @@ const C = {
 };
 
 const ICONS: Record<string, { name: any; label: string }> = {
-  lists:      { name: 'house.fill',     label: 'HJEM' },
-  history:    { name: 'clock.fill',     label: 'HISTORIKK' },
-  statistics: { name: 'chart.bar.fill', label: 'STATISTIKK' },
-  settings:   { name: 'gearshape.fill', label: 'INNSTILLINGER' },
+  lists:      { name: 'house.fill',     label: 'Hjem' },
+  history:    { name: 'clock.fill',     label: 'Historikk' },
+  statistics: { name: 'chart.bar.fill', label: 'Statistikk' },
+  settings:   { name: 'gearshape.fill', label: 'Meny' },
 };
 
 export function PWATabBar({ state, navigation }: BottomTabBarProps) {
@@ -28,15 +28,15 @@ export function PWATabBar({ state, navigation }: BottomTabBarProps) {
         borderTopColor: 'rgba(167,241,216,0.2)',
         flexDirection: 'row' as const,
         alignItems: 'flex-start' as const,
-        paddingTop: 8,
-        paddingBottom: 'max(4px, calc(env(safe-area-inset-bottom, 8px) - 16px))' as any,
+        paddingTop: 6,
+        paddingBottom: 'max(4px, env(safe-area-inset-bottom, 8px))' as any,
         backdropFilter: 'blur(40px)',
         WebkitBackdropFilter: 'blur(40px)',
         boxShadow: '0 -8px 32px rgba(0,54,42,0.08)',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         zIndex: 9999,
-        minHeight: 56,
+        minHeight: 52,
       } as any}
     >
       {state.routes.map((route, index) => {
@@ -65,13 +65,13 @@ export function PWATabBar({ state, navigation }: BottomTabBarProps) {
           >
             <IconSymbol
               name={icon.name}
-              size={22}
+              size={20}
               color={isFocused ? C.primary : C.inactive}
             />
             <Text style={{
-              fontSize: 9,
-              fontWeight: '700' as const,
-              letterSpacing: 0.8,
+              fontSize: 10,
+              fontWeight: '600' as const,
+              letterSpacing: 0.2,
               color: isFocused ? C.primary : C.inactive,
               ...(Platform.OS === 'web' ? { fontFamily: "'Manrope', system-ui, sans-serif" } as any : {}),
             }}>

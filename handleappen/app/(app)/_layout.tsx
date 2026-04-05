@@ -28,51 +28,50 @@ export default function AppLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: 'rgba(255,255,255,0.8)',
+          backgroundColor: 'rgba(255,255,255,0.85)',
           borderTopColor: 'rgba(167,241,216,0.1)',
           borderTopWidth: 1,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 12,
-          paddingTop: 10,
-          height: Platform.OS === 'ios' ? 84 : 68,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+          paddingTop: 6,
+          height: Platform.OS === 'ios' ? 68 : 58,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '700',
-          letterSpacing: 1,
-          textTransform: 'uppercase',
-          marginTop: 2,
+          fontSize: 10,
+          fontWeight: '600',
+          letterSpacing: 0.2,
+          marginTop: 1,
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
+          paddingVertical: 2,
         },
       }}
     >
       <Tabs.Screen
         name="lists"
         options={{
-          title: t('tabs.lists'),
-          tabBarIcon: ({ color }) => <IconSymbol size={22} name="list.bullet" color={color} />,
+          title: 'Hjem',
+          tabBarIcon: ({ color }) => <IconSymbol size={20} name="house.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
-          title: t('tabs.history'),
-          tabBarIcon: ({ color }) => <IconSymbol size={22} name="clock.fill" color={color} />,
+          title: 'Historikk',
+          tabBarIcon: ({ color }) => <IconSymbol size={20} name="clock.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="statistics"
         options={{
-          title: t('tabs.statistics'),
-          tabBarIcon: ({ color }) => <IconSymbol size={22} name="chart.bar.fill" color={color} />,
+          title: 'Statistikk',
+          tabBarIcon: ({ color }) => <IconSymbol size={20} name="chart.bar.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: t('tabs.settings'),
-          tabBarIcon: ({ color }) => <IconSymbol size={22} name="gearshape.fill" color={color} />,
+          title: 'Meny',
+          tabBarIcon: ({ color }) => <IconSymbol size={20} name="gearshape.fill" color={color} />,
         }}
       />
     </Tabs>

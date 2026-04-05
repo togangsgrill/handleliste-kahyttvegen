@@ -175,10 +175,10 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
             <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: C.outline + '66' }} />
           </View>
 
-          <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+          <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 32 }} keyboardShouldPersistTaps="handled">
 
             {/* Header */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, gap: 12 } as any}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14, gap: 12 } as any}>
               {(item as any)?.image_url && (
                 <Image
                   source={{ uri: (item as any).image_url }}
@@ -205,7 +205,7 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
               )}
               <View style={{ flex: 1 }}>
                 <TextInput
-                  style={{ fontSize: 24, fontWeight: '800', color: C.text, fontFamily: C.font } as any}
+                  style={{ fontSize: 19, fontWeight: '800', color: C.text, fontFamily: C.font } as any}
                   value={name}
                   onChangeText={setName}
                 />
@@ -216,20 +216,19 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
             </View>
 
             {/* Stat-kort */}
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 } as any}>
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 14 } as any}>
               {/* Kjøpsfrekvens */}
-              <View style={{ flex: 1, backgroundColor: C.low, borderRadius: 16, padding: 14 }}>
-                <MaterialIcons name="shopping-cart" size={18} color={C.primary} />
+              <View style={{ flex: 1, backgroundColor: C.low, borderRadius: 14, padding: 10 }}>
+                <MaterialIcons name="shopping-cart" size={16} color={C.primary} />
                 {loadingStats ? (
-                  <ActivityIndicator size="small" color={C.primary} style={{ marginTop: 8 }} />
+                  <ActivityIndicator size="small" color={C.primary} style={{ marginTop: 6 }} />
                 ) : (
                   <>
-                    <Text style={{ fontSize: 22, fontWeight: '800', color: C.text, marginTop: 8, fontFamily: C.font } as any}>
-                      {stats?.count ?? 0}×
+                    <Text style={{ fontSize: 18, fontWeight: '800', color: C.text, marginTop: 4, fontFamily: C.font } as any}>
+                      {stats?.count ?? 0}× <Text style={{ fontSize: 11, fontWeight: '600', color: C.textSec } as any}>kjøpt</Text>
                     </Text>
-                    <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>kjøpt totalt</Text>
                     {stats?.lastDate && (
-                      <Text style={{ fontSize: 11, color: C.outline, marginTop: 4, fontFamily: C.fontBody } as any}>
+                      <Text style={{ fontSize: 10, color: C.outline, marginTop: 2, fontFamily: C.fontBody } as any}>
                         sist for {daysSince(stats.lastDate)}d siden
                       </Text>
                     )}
@@ -238,22 +237,21 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
               </View>
 
               {/* Siste pris */}
-              <View style={{ flex: 1, backgroundColor: C.low, borderRadius: 16, padding: 14 }}>
-                <MaterialIcons name="sell" size={18} color={C.primary} />
+              <View style={{ flex: 1, backgroundColor: C.low, borderRadius: 14, padding: 10 }}>
+                <MaterialIcons name="sell" size={16} color={C.primary} />
                 {latestPrice ? (
                   <>
-                    <Text style={{ fontSize: 22, fontWeight: '800', color: C.text, marginTop: 8, fontFamily: C.font } as any}>
+                    <Text style={{ fontSize: 18, fontWeight: '800', color: C.text, marginTop: 4, fontFamily: C.font } as any}>
                       {latestPrice.unitPrice.toFixed(0)} kr
                     </Text>
-                    <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>{latestPrice.storeName}</Text>
-                    <Text style={{ fontSize: 11, color: C.outline, marginTop: 4, fontFamily: C.fontBody } as any}>
-                      {daysSince(latestPrice.observedAt)}d siden
+                    <Text style={{ fontSize: 10, color: C.textSec, fontFamily: C.fontBody } as any} numberOfLines={1}>
+                      {latestPrice.storeName} · {daysSince(latestPrice.observedAt)}d siden
                     </Text>
                   </>
                 ) : (
                   <>
-                    <Text style={{ fontSize: 18, fontWeight: '700', color: C.outline, marginTop: 8, fontFamily: C.font } as any}>—</Text>
-                    <Text style={{ fontSize: 12, color: C.textSec, fontFamily: C.fontBody } as any}>ingen prisdata</Text>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: C.outline, marginTop: 4, fontFamily: C.font } as any}>—</Text>
+                    <Text style={{ fontSize: 10, color: C.textSec, fontFamily: C.fontBody } as any}>ingen prisdata</Text>
                   </>
                 )}
               </View>
@@ -348,33 +346,33 @@ export function ItemDetailSheet({ item, categories, storePrices, latestPrice, on
             )}
 
             {/* Divider */}
-            <View style={{ height: 1, backgroundColor: C.outline + '22', marginBottom: 20 }} />
+            <View style={{ height: 1, backgroundColor: C.outline + '22', marginBottom: 14 }} />
 
             {/* Antall */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Antall</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 } as any}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>Antall</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 } as any}>
                 <TouchableOpacity
-                  style={{ width: 36, height: 36, borderRadius: 999, backgroundColor: C.low, alignItems: 'center', justifyContent: 'center' }}
+                  style={{ width: 30, height: 30, borderRadius: 999, backgroundColor: C.low, alignItems: 'center', justifyContent: 'center' }}
                   onPress={() => setQuantity(String(Math.max(1, parseInt(quantity) - 1)))}
                 >
-                  <Text style={{ color: C.text, fontSize: 20 }}>−</Text>
+                  <Text style={{ color: C.text, fontSize: 18 }}>−</Text>
                 </TouchableOpacity>
-                <Text style={{ fontSize: 20, fontWeight: '700', color: C.text, minWidth: 28, textAlign: 'center' } as any}>{quantity}</Text>
+                <Text style={{ fontSize: 17, fontWeight: '700', color: C.text, minWidth: 24, textAlign: 'center' } as any}>{quantity}</Text>
                 <TouchableOpacity
-                  style={{ width: 36, height: 36, borderRadius: 999, backgroundColor: C.low, alignItems: 'center', justifyContent: 'center' }}
+                  style={{ width: 30, height: 30, borderRadius: 999, backgroundColor: C.low, alignItems: 'center', justifyContent: 'center' }}
                   onPress={() => setQuantity(String(parseInt(quantity) + 1))}
                 >
-                  <Text style={{ color: C.text, fontSize: 20 }}>+</Text>
+                  <Text style={{ color: C.text, fontSize: 18 }}>+</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Kategori */}
-            <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 10 } as any}>
+            <Text style={{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 6 } as any}>
               Kategori
             </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <TouchableOpacity
                   style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: !categoryId ? C.primary : C.container }}
