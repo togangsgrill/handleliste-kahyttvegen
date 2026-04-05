@@ -6,6 +6,11 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { RecipeCard } from '@/components/recipe-card';
+import { isStaple } from '@/hooks/useRecipeImport';
+
+function normalizeName(n: string) {
+  return n.toLowerCase().trim();
+}
 
 const C = {
   bg: '#d8fff0', white: '#ffffff', low: '#bffee7', container: '#b2f6de',
@@ -34,6 +39,38 @@ interface RecipeIngredient {
   name: string;
   quantity: number | null;
   unit: string | null;
+  is_staple: boolean;
+  alreadyOnList: boolean;
+  skip: boolean;
+}
+
+function IngredientRow({ ing, onToggle }: {
+  ing: { name: string; quantity: number | null; unit: string | null; skip: boolean };
+  onToggle: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onToggle}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, opacity: ing.skip ? 0.45 : 1 } as any}
+      activeOpacity={0.7}
+    >
+      <View style={{
+        width: 22, height: 22, borderRadius: 6,
+        backgroundColor: ing.skip ? 'transparent' : '#006947',
+        borderWidth: ing.skip ? 2 : 0,
+        borderColor: '#81b8a5',
+        alignItems: 'center', justifyContent: 'center',
+      } as any}>
+        {!ing.skip && <MaterialIcons name="check" size={15} color="#ffffff" />}
+      </View>
+      <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: '#00362a', fontFamily: "'Manrope', system-ui, sans-serif", textTransform: 'capitalize' } as any}>
+        {ing.name}
+      </Text>
+      <Text style={{ fontSize: 13, fontWeight: '700', color: '#2f6555', fontFamily: "'Manrope', system-ui, sans-serif" } as any}>
+        {ing.quantity !== null ? formatQty(ing.quantity) : ''}{ing.unit ? ' ' + ing.unit : ing.quantity && ing.quantity > 1 ? ' stk' : ''}
+      </Text>
+    </TouchableOpacity>
+  );
 }
 
 const SOURCE_ICON: Record<string, string> = {
@@ -103,9 +140,48 @@ export default function RecipesListScreen() {
       .select('id, name, quantity, unit')
       .eq('recipe_id', recipe.id)
       .order('created_at', { ascending: true });
-    setIngredients(data ?? []);
+    const enriched: RecipeIngredient[] = (data ?? []).map((ing) => {
+      const staple = isStaple(ing.name);
+      return {
+        ...ing,
+        is_staple: staple,
+        alreadyOnList: false,
+        // Basisvarer deselekteres som standard (samme som ukesmeny-flyten)
+        skip: staple,
+      };
+    });
+    setIngredients(enriched);
     setLoadingIngredients(false);
   };
+
+  // Når brukeren velger en liste, sjekk hvilke ingredienser som allerede
+  // finnes på den listen og marker dem `alreadyOnList + skip`.
+  useEffect(() => {
+    if (!selectedListId || ingredients.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('list_items')
+        .select('name')
+        .eq('list_id', selectedListId)
+        .eq('is_deleted', false);
+      if (cancelled || !data) return;
+      const existingNames = new Set(data.map((r) => normalizeName(r.name)));
+      setIngredients((prev) =>
+        prev.map((ing) => {
+          const onList = existingNames.has(normalizeName(ing.name));
+          return {
+            ...ing,
+            alreadyOnList: onList,
+            // Oppdater skip: basisvarer + eksisterende deselekteres,
+            // resten beholder brukerens valg (men re-beregn hvis ikke rørt)
+            skip: ing.is_staple || onList,
+          };
+        }),
+      );
+    })();
+    return () => { cancelled = true; };
+  }, [selectedListId]);
 
   const handleDeleteRecipe = async () => {
     if (!selectedRecipe) return;
@@ -142,18 +218,41 @@ export default function RecipesListScreen() {
   const handleAddToList = async () => {
     if (!selectedListId || !selectedRecipe) return;
     setAddingToList(true);
-    await supabase.from('list_items').insert(
-      ingredients.map((ing) => ({
-        list_id: selectedListId,
-        name: ing.name,
-        quantity: Math.max(1, Math.round(ing.quantity ?? 1)),
-        note: ing.unit ? `${formatQty(ing.quantity)} ${ing.unit} · fra ${selectedRecipe.name}` : `fra ${selectedRecipe.name}`,
-        recipe_id: selectedRecipe.id,
-        is_checked: false,
-        is_deleted: false,
-      }))
-    );
-    setAddedCount(ingredients.length);
+
+    const toAdd = ingredients.filter((i) => !i.skip);
+    let added = 0;
+    for (const ing of toAdd) {
+      // Sjekk duplikat (kan ha dukket opp etter at modal ble åpnet)
+      const { data: existing } = await supabase
+        .from('list_items')
+        .select('id, quantity')
+        .eq('list_id', selectedListId)
+        .ilike('name', ing.name)
+        .eq('is_deleted', false)
+        .maybeSingle();
+
+      const qty = Math.max(1, Math.round(ing.quantity ?? 1));
+
+      if (existing) {
+        await supabase.from('list_items').update({
+          quantity: (existing.quantity ?? 0) + qty,
+          note: `fra ${selectedRecipe.name}`,
+        }).eq('id', existing.id);
+      } else {
+        await supabase.from('list_items').insert({
+          list_id: selectedListId,
+          name: ing.name,
+          quantity: qty,
+          note: ing.unit ? `${formatQty(ing.quantity)} ${ing.unit} · fra ${selectedRecipe.name}` : `fra ${selectedRecipe.name}`,
+          recipe_id: selectedRecipe.id,
+          is_checked: false,
+          is_deleted: false,
+        });
+      }
+      added++;
+    }
+
+    setAddedCount(added);
     setAddingToList(false);
   };
 
@@ -274,42 +373,21 @@ export default function RecipesListScreen() {
                       )}
                     </View>
 
-                    {/* Ingredients */}
-                    <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 10 } as any}>
-                      Ingredienser
-                    </Text>
-
-                    {loadingIngredients ? (
-                      <ActivityIndicator color={C.primary} />
-                    ) : (
-                      <View style={{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }}>
-                        {ingredients.map((ing, i) => (
-                          <View key={ing.id} style={[
-                            { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, gap: 12 } as any,
-                            i < ingredients.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(129,184,165,0.15)' } : {},
-                          ]}>
-                            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.primary }} />
-                            <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: C.text, fontFamily: C.fontBody, textTransform: 'capitalize' } as any}>{ing.name}</Text>
-                            <Text style={{ fontSize: 13, fontWeight: '700', color: C.textSec, fontFamily: C.fontBody } as any}>
-                              {formatQty(ing.quantity)}{ing.unit ? ' ' + ing.unit : ing.quantity && ing.quantity > 1 ? ' stk' : ''}
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-
-                    {/* Add to list */}
+                    {/* Add to list (med samme mønster som ukesmeny) */}
                     {addedCount !== null ? (
                       <View style={{ backgroundColor: C.primaryContainer + '77', borderRadius: 16, padding: 16, alignItems: 'center', gap: 6 } as any}>
                         <MaterialIcons name="check-circle" size={24} color={C.primary} />
                         <Text style={{ fontSize: 15, fontWeight: '700', color: C.text, fontFamily: C.font } as any}>{addedCount} varer lagt til!</Text>
                       </View>
+                    ) : loadingIngredients ? (
+                      <ActivityIndicator color={C.primary} />
                     ) : (
                       <>
+                        {/* Velg liste */}
                         <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 10 } as any}>
                           Legg til i liste
                         </Text>
-                        <View style={{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: C.outline + '33', marginBottom: 16 }}>
+                        <View style={{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: C.outline + '33', marginBottom: 20 }}>
                           {lists.map((list, i) => (
                             <TouchableOpacity
                               key={list.id}
@@ -328,20 +406,73 @@ export default function RecipesListScreen() {
                           ))}
                         </View>
 
+                        {/* Ingredienser — seksjoner som i ukesmeny */}
+                        {ingredients.some((i) => !i.alreadyOnList && !i.is_staple) && (
+                          <View style={{ marginBottom: 16 }}>
+                            <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 8 } as any}>
+                              Legges til
+                            </Text>
+                            {ingredients.filter((i) => !i.alreadyOnList && !i.is_staple).map((ing) => (
+                              <IngredientRow
+                                key={`add-${ing.id}`}
+                                ing={ing}
+                                onToggle={() => setIngredients((prev) =>
+                                  prev.map((p) => p.id === ing.id ? { ...p, skip: !p.skip } : p)
+                                )}
+                              />
+                            ))}
+                          </View>
+                        )}
+
+                        {ingredients.some((i) => i.is_staple && !i.alreadyOnList) && (
+                          <View style={{ marginBottom: 16 }}>
+                            <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 8 } as any}>
+                              Basisvarer (har du trolig hjemme)
+                            </Text>
+                            {ingredients.filter((i) => i.is_staple && !i.alreadyOnList).map((ing) => (
+                              <IngredientRow
+                                key={`staple-${ing.id}`}
+                                ing={ing}
+                                onToggle={() => setIngredients((prev) =>
+                                  prev.map((p) => p.id === ing.id ? { ...p, skip: !p.skip } : p)
+                                )}
+                              />
+                            ))}
+                          </View>
+                        )}
+
+                        {ingredients.some((i) => i.alreadyOnList) && (
+                          <View style={{ marginBottom: 16 }}>
+                            <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, color: C.textSec, fontFamily: C.fontBody, marginBottom: 8 } as any}>
+                              Allerede på listen
+                            </Text>
+                            {ingredients.filter((i) => i.alreadyOnList).map((ing) => (
+                              <IngredientRow
+                                key={`exists-${ing.id}`}
+                                ing={ing}
+                                onToggle={() => setIngredients((prev) =>
+                                  prev.map((p) => p.id === ing.id ? { ...p, skip: !p.skip } : p)
+                                )}
+                              />
+                            ))}
+                          </View>
+                        )}
+
                         <TouchableOpacity
                           style={[{
+                            marginTop: 8,
                             paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
                             flexDirection: 'row', gap: 8,
-                            backgroundColor: selectedListId ? C.primary : C.outline + '66',
-                          } as any, isWeb && selectedListId ? ({ boxShadow: '0px 4px 16px rgba(0,105,71,0.3)' } as any) : {}]}
+                            backgroundColor: selectedListId && ingredients.filter((i) => !i.skip).length > 0 ? C.primary : C.outline + '66',
+                          } as any, isWeb && selectedListId && ingredients.filter((i) => !i.skip).length > 0 ? ({ boxShadow: '0px 4px 16px rgba(0,105,71,0.3)' } as any) : {}]}
                           onPress={handleAddToList}
-                          disabled={!selectedListId || addingToList}
+                          disabled={!selectedListId || addingToList || ingredients.filter((i) => !i.skip).length === 0}
                           activeOpacity={0.8}
                         >
                           {addingToList
                             ? <><ActivityIndicator color={C.white} size="small" /><Text style={{ color: C.white, fontSize: 16, fontWeight: '700', fontFamily: C.font } as any}>Legger til...</Text></>
                             : <Text style={{ color: C.white, fontSize: 16, fontWeight: '700', fontFamily: C.font } as any}>
-                                Legg til {ingredients.length} ingredienser
+                                Legg til {ingredients.filter((i) => !i.skip).length} ingredienser
                               </Text>
                           }
                         </TouchableOpacity>
