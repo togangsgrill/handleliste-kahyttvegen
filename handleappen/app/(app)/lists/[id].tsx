@@ -19,6 +19,7 @@ import { useCategoryOrder } from '@/hooks/useCategoryOrder';
 import { useItemSearch } from '@/hooks/useItemSearch';
 import { useExpectedList } from '@/hooks/useExpectedList';
 import { useEnrichItems } from '@/hooks/useEnrichItems';
+import { useFavoriteStore } from '@/hooks/useFavoriteStore';
 import { useSortedItems, SORT_OPTIONS, type SortMode } from '@/hooks/useSortedItems';
 import { DraggableList } from '@/components/draggable-list';
 import { supabase } from '@/lib/supabase';
@@ -65,6 +66,40 @@ export default function ListDetailScreen() {
   const basketSuggestions = useBasketSuggestions(activeItems.map((i) => i.name));
 
   const [selectedStore, setSelectedStore] = useState<StoreWithDistance | null>(null);
+  const [userHasPickedStore, setUserHasPickedStore] = useState(false);
+  const { favoriteStoreId } = useFavoriteStore();
+
+  // Forhåndsvelg mest brukte butikk hvis brukeren ikke har valgt noe manuelt
+  useEffect(() => {
+    if (userHasPickedStore || selectedStore || !favoriteStoreId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('store_locations' as any)
+        .select('id, name, chain, address, lat, lng')
+        .eq('id', favoriteStoreId)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const { getChainInfo } = await import('@/constants/chains');
+      setSelectedStore({
+        id: (data as any).id,
+        name: (data as any).name,
+        chain: (data as any).chain,
+        chainInfo: getChainInfo((data as any).chain),
+        address: (data as any).address,
+        lat: (data as any).lat,
+        lng: (data as any).lng,
+        distanceKm: null,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [favoriteStoreId, userHasPickedStore, selectedStore]);
+
+  const handleStorePick = useCallback((store: StoreWithDistance | null) => {
+    setUserHasPickedStore(true);
+    setSelectedStore(store);
+  }, []);
+
   const [showCategoryOrder, setShowCategoryOrder] = useState(false);
   const categoryOrder = useCategoryOrder(selectedStore?.id ?? null);
 
@@ -162,7 +197,7 @@ export default function ListDetailScreen() {
           {/* Store Selector */}
           <View style={[{ marginBottom: 24, backgroundColor: C.white, borderRadius: 20, padding: 16 }, Platform.OS === 'web' ? { boxShadow: '0px 4px 12px rgba(0,54,42,0.04)' } as any : {}]}>
             <Text style={{ fontSize: 11, fontWeight: '700', color: C.textSec, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8, fontFamily: C.fontBody } as any}>Butikk</Text>
-            <StorePicker selectedStoreId={selectedStore?.id ?? null} onSelect={setSelectedStore} />
+            <StorePicker selectedStoreId={selectedStore?.id ?? null} onSelect={handleStorePick} />
           </View>
 
           {/* Add Item */}
